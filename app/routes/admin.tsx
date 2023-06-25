@@ -9,11 +9,10 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { getAllAPI } from "@/lib/api.server";
 import {
   generateAPIKey,
-  getAPIKey,
-  storeHashOfAPIKey,
+  getUserRootAPIKeyRecord,
+  storeHashOfRootAPIKey,
 } from "@/lib/apiKeys.server";
 import { requireUserId } from "@/lib/auth.server";
 import {
@@ -22,15 +21,12 @@ import {
   json,
   redirect,
 } from "@remix-run/node";
-import { Form, useLoaderData } from "@remix-run/react";
+import { Form, useActionData, useLoaderData } from "@remix-run/react";
 import { z } from "zod";
 
 export async function loader({ request }: LoaderArgs) {
   const userId = await requireUserId(request);
-  const [apiKey, apiList] = await Promise.all([
-    getAPIKey(userId),
-    getAllAPI(userId),
-  ]);
+  const [apiKey] = await Promise.all([getUserRootAPIKeyRecord(userId)]);
 
   if (apiKey instanceof Error) {
     throw new Response(null, {
@@ -41,7 +37,7 @@ export async function loader({ request }: LoaderArgs) {
 
   const isAPIKeyGenerated = apiKey !== null;
 
-  return json({ isAPIKeyGenerated, apiList: apiList });
+  return json({ isAPIKeyGenerated, apiList: [] });
 }
 
 export async function action({ request }: ActionArgs) {
@@ -63,7 +59,7 @@ export async function action({ request }: ActionArgs) {
 
   if (action === "generateAPIKey") {
     const { apiKey, hash, salt } = await generateAPIKey();
-    const apiKeyDoc = await storeHashOfAPIKey({ hash, userId, salt });
+    const apiKeyDoc = await storeHashOfRootAPIKey({ hash, userId, salt });
 
     if (apiKeyDoc instanceof Error) {
       console.log(apiKeyDoc);
@@ -80,7 +76,9 @@ export async function action({ request }: ActionArgs) {
 
 export default function AdminPage() {
   const { apiList } = useLoaderData<typeof loader>();
+  const actionData = useActionData<typeof action>();
   const isAPIListEmpty = apiList.length === 0;
+  const apiKey = actionData?.success ? actionData.apiKey : null;
 
   return (
     <main className="min-h-screen grid place-items-center">
@@ -104,6 +102,12 @@ export default function AdminPage() {
           <Button>Generate</Button>
         </CardFooter>
       </Card>
+      <h1>{apiKey}</h1>
+      <Form method="POST">
+        <button type="submit" name="action" value="generateAPIKey">
+          Generate API Key
+        </button>
+      </Form>
     </main>
   );
 }

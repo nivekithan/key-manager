@@ -1,0 +1,3 @@
+POST http://localhost:3000/api/v1/keys
+Authorization: Bearer 2AFtz7vapwkbFj65axKyxnV8tFQW8Yg7MdswT5Su36ts8oNhG3
+
