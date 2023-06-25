@@ -51,6 +51,7 @@ export async function action({ request }: ActionArgs) {
     const apiKeyDoc = await storeHashOfAPIKey({ hash, userId, salt });
 
     if (apiKeyDoc instanceof Error) {
+      console.log(apiKeyDoc);
       return json({ success: false, reason: apiKeyDoc.message } as const, {
         status: 500,
       });
@@ -71,13 +72,12 @@ export default function AdminPage() {
     <h1>
       {isAPIKeyGenerated ? (
         <h1>{apiKey ? apiKey : "APIKey is already generated"} </h1>
-      ) : (
-        <Form method="post">
-          <button type="submit" name="action" value="generateAPIKey">
-            Generate API Key
-          </button>
-        </Form>
-      )}
+      ) : null}
+      <Form method="post">
+        <button type="submit" name="action" value="generateAPIKey">
+          Generate API Key
+        </button>
+      </Form>
     </h1>
   );
 }

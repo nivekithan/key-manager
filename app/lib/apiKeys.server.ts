@@ -48,7 +48,7 @@ export async function storeHashOfAPIKey({
 }) {
   const apiKey = await prisma.apiKey
     .upsert({
-      where: { hash: hash },
+      where: { userId: userId },
       update: { hash, salt },
 
       create: { hash, salt, userId },
