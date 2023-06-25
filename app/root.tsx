@@ -25,6 +25,7 @@ export default function App() {
       <body>
         <Outlet />
         <ScrollRestoration />
+        <script src="https://psg.so/web.js"></script>
         <Scripts />
         <LiveReload />
       </body>

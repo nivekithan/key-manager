@@ -10,6 +10,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model check {
-  id String @id
+model apiKey {
+  userId String @id
+  hash String @unique 
+  salt String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
