@@ -1,3 +1,15 @@
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { getAllAPI } from "@/lib/api.server";
 import {
   generateAPIKey,
   getAPIKey,
@@ -10,12 +22,15 @@ import {
   json,
   redirect,
 } from "@remix-run/node";
-import { Form, useActionData, useLoaderData } from "@remix-run/react";
+import { Form, useLoaderData } from "@remix-run/react";
 import { z } from "zod";
 
 export async function loader({ request }: LoaderArgs) {
   const userId = await requireUserId(request);
-  const apiKey = await getAPIKey(userId);
+  const [apiKey, apiList] = await Promise.all([
+    getAPIKey(userId),
+    getAllAPI(userId),
+  ]);
 
   if (apiKey instanceof Error) {
     throw new Response(null, {
@@ -26,7 +41,7 @@ export async function loader({ request }: LoaderArgs) {
 
   const isAPIKeyGenerated = apiKey !== null;
 
-  return json({ isAPIKeyGenerated });
+  return json({ isAPIKeyGenerated, apiList: apiList });
 }
 
 export async function action({ request }: ActionArgs) {
@@ -64,20 +79,31 @@ export async function action({ request }: ActionArgs) {
 }
 
 export default function AdminPage() {
-  const { isAPIKeyGenerated } = useLoaderData<typeof loader>();
-  const actionData = useActionData<typeof action>();
-  const apiKey = actionData?.success ? actionData.apiKey : null;
+  const { apiList } = useLoaderData<typeof loader>();
+  const isAPIListEmpty = apiList.length === 0;
 
   return (
-    <h1>
-      {isAPIKeyGenerated ? (
-        <h1>{apiKey ? apiKey : "APIKey is already generated"} </h1>
-      ) : null}
-      <Form method="post">
-        <button type="submit" name="action" value="generateAPIKey">
-          Generate API Key
-        </button>
-      </Form>
-    </h1>
+    <main className="min-h-screen grid place-items-center">
+      <Card className="w-96">
+        <CardHeader>
+          <CardTitle>Create new API</CardTitle>
+          <CardDescription>Each API gets its own token</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Form>
+            <Label htmlFor="api-name">Name of the API</Label>
+            <Input
+              type="text"
+              placeholder="my-app-api"
+              id="api-name"
+              name="apiName"
+            />
+          </Form>
+        </CardContent>
+        <CardFooter className="flex">
+          <Button>Generate</Button>
+        </CardFooter>
+      </Card>
+    </main>
   );
 }

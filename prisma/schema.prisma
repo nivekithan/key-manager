@@ -18,3 +18,14 @@ model apiKey {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+model api {
+  apiId String @id
+  name String
+  userId String 
+
+  @@unique([userId, name])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

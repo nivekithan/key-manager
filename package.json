@@ -11,6 +11,8 @@
     "@passageidentity/passage-elements": "^1.9.1",
     "@passageidentity/passage-node": "^2.3.0",
     "@prisma/client": "^4.15.0",
+    "@radix-ui/react-label": "^2.0.2",
+    "@radix-ui/react-slot": "^1.0.2",
     "@remix-run/css-bundle": "^1.17.1",
     "@remix-run/node": "^1.17.1",
     "@remix-run/react": "^1.17.1",
