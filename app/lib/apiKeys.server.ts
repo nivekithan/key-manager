@@ -57,6 +57,22 @@ export async function storeHashOfRootAPIKey({
   return apiKey;
 }
 
+export async function storeUserAPIKey({
+  hash,
+  salt,
+  userId,
+}: {
+  hash: string;
+  salt: string;
+  userId: string;
+}) {
+  const apiKey = await prisma.userAPIKey.create({
+    data: { createdByUser: userId, hash, salt },
+  });
+
+  return apiKey;
+}
+
 export async function getRootAPIKeyRecord(rootAPIKey: string) {
   const { hash } = await hashAPIKey(rootAPIKey);
 

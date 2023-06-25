@@ -1,5 +1,6 @@
+import { generateAPIKey, storeUserAPIKey } from "@/lib/apiKeys.server";
 import { authorizeAPIRequest } from "@/lib/auth.server";
-import { type ActionArgs } from "@remix-run/node";
+import { json, type ActionArgs } from "@remix-run/node";
 
 /**
  * Creates new user apiKey
@@ -24,5 +25,13 @@ export async function action({ request }: ActionArgs) {
     });
   }
 
-  return new Response("Authorized");
+  const authorizedUserId = statusOfAuthorization.rootAPIKeyRecord.userId;
+  const { hash, salt, apiKey } = await generateAPIKey();
+  await storeUserAPIKey({
+    hash,
+    salt,
+    userId: authorizedUserId,
+  });
+
+  return json({ apiKey });
 }
