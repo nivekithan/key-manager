@@ -15,7 +15,6 @@ export async function action({ request }: ActionArgs) {
       statusText: `Method ${method} not allowed`,
     });
   }
-
   const statusOfAuthorization = await authorizeAPIRequest(request);
 
   if (!statusOfAuthorization.authorized) {
@@ -26,10 +25,9 @@ export async function action({ request }: ActionArgs) {
   }
 
   const authorizedUserId = statusOfAuthorization.rootAPIKeyRecord.userId;
-  const { hash, salt, apiKey } = await generateAPIKey();
+  const { apiKey } = await generateAPIKey();
   await storeUserAPIKey({
-    hash,
-    salt,
+    apiKey,
     userId: authorizedUserId,
   });
 

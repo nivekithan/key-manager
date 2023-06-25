@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import {
   generateAPIKey,
   getUserRootAPIKeyRecord,
-  storeHashOfRootAPIKey,
+  storeRootAPIKey,
 } from "@/lib/apiKeys.server";
 import { requireUserId } from "@/lib/auth.server";
 import {
@@ -58,8 +58,8 @@ export async function action({ request }: ActionArgs) {
   const action = parseAction.data;
 
   if (action === "generateAPIKey") {
-    const { apiKey, hash, salt } = await generateAPIKey();
-    const apiKeyDoc = await storeHashOfRootAPIKey({ hash, userId, salt });
+    const { apiKey } = await generateAPIKey();
+    const apiKeyDoc = await storeRootAPIKey({ userId, apiKey });
 
     if (apiKeyDoc instanceof Error) {
       console.log(apiKeyDoc);

@@ -21,9 +21,7 @@ export async function generateAPIKey() {
 
   const apiKey = base58(buf);
 
-  const { hash, salt } = await hashAPIKey(apiKey);
-
-  return { apiKey, hash, salt };
+  return { apiKey };
 }
 
 async function hashAPIKey(apiKey: string) {
@@ -36,16 +34,15 @@ async function hashAPIKey(apiKey: string) {
   return { hash: bytes.toString("base64"), salt: SALT };
 }
 
-export async function storeHashOfRootAPIKey({
-  hash,
-  salt,
+export async function storeRootAPIKey({
+  apiKey,
   userId,
 }: {
-  hash: string;
-  salt: string;
+  apiKey: string;
   userId: string;
 }) {
-  const apiKey = await prisma.rootAPIKey
+  const { hash, salt } = await hashAPIKey(apiKey);
+  const apiKeyRec = await prisma.rootAPIKey
     .upsert({
       where: { userId: userId },
       update: { hash, salt },
@@ -54,23 +51,22 @@ export async function storeHashOfRootAPIKey({
     })
     .catch((err: Error) => err);
 
-  return apiKey;
+  return apiKeyRec;
 }
 
 export async function storeUserAPIKey({
-  hash,
-  salt,
+  apiKey,
   userId,
 }: {
-  hash: string;
-  salt: string;
+  apiKey: string;
   userId: string;
 }) {
-  const apiKey = await prisma.userAPIKey.create({
+  const { hash, salt } = await hashAPIKey(apiKey);
+  const apiKeyRecord = await prisma.userAPIKey.create({
     data: { createdByUser: userId, hash, salt },
   });
 
-  return apiKey;
+  return apiKeyRecord;
 }
 
 export async function getRootAPIKeyRecord(rootAPIKey: string) {
