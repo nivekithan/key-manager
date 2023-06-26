@@ -24,7 +24,7 @@ export async function generateAPIKey() {
   return { apiKey };
 }
 
-export async function hashAPIKey(apiKey: string) {
+async function hashAPIKey(apiKey: string) {
   const hashOfKey = await crypto.subtle.digest(
     "sha-256",
     new TextEncoder().encode(apiKey + SALT)
@@ -77,3 +77,9 @@ export async function getRootAPIKeyRecord(rootAPIKey: string) {
   return apiKeyRec;
 }
 
+export async function getUserAPIKeyRecord(userAPIKey: string) {
+  const { hash } = await hashAPIKey(userAPIKey);
+
+  const apiKeyRec = await prisma.userAPIKey.findUnique({ where: { hash } });
+  return apiKeyRec;
+}
