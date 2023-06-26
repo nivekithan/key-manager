@@ -91,14 +91,34 @@ export async function getUserAPIKeyRecord(userAPIKey: string, userId: string) {
 
 export function generateIDForAPIKey({
   endpoint,
-  hashAPIKey,
+  idOfAPIKey,
   variables,
 }: {
-  hashAPIKey: string;
+  idOfAPIKey: string;
   endpoint: string;
   variables: Array<string>;
 }) {
-  const id = `${hashAPIKey}_${endpoint}_${variables.join("_")}`;
+  const id = `${idOfAPIKey}_${endpoint}_${variables.join("_")}`;
 
   return id;
+}
+
+export async function getUserAPIKeyRecordById(id: string, userId: string) {
+  const apiKeyRecord = await prisma.userAPIKey.findFirst({
+    where: { id, createdByUser: userId },
+  });
+
+  return apiKeyRecord;
+}
+
+export async function rotateUserAPIKey(id: string) {
+  const { apiKey } = await generateAPIKey();
+  const { hash, salt } = await hashAPIKey(apiKey);
+
+  await prisma.userAPIKey.update({
+    where: { id },
+    data: { hash, salt },
+  });
+
+  return { apiKey };
 }

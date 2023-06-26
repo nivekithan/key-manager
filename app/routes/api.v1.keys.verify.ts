@@ -60,7 +60,7 @@ export async function action({ request }: ActionArgs) {
     duration,
     id: generateIDForAPIKey({
       endpoint,
-      hashAPIKey: userAPIKeyRec.hash,
+      idOfAPIKey: userAPIKeyRec.id,
       variables,
     }),
     max: maxReq,
