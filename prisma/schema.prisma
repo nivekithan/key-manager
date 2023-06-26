@@ -25,6 +25,7 @@ model userAPIKey {
   createdByUser String 
   hash String @unique
   salt String 
+  prefix String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

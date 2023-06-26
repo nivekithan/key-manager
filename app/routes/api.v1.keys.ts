@@ -1,7 +1,9 @@
 import { generateAPIKey, storeUserAPIKey } from "@/lib/apiKeys.server";
 import { authorizeAPIRequest } from "@/lib/auth.server";
 import { json, type ActionArgs } from "@remix-run/node";
+import { z } from "zod";
 
+const InputSchema = z.object({ prefix: z.string() });
 /**
  * Creates new user apiKey
  */
@@ -23,12 +25,22 @@ export async function action({ request }: ActionArgs) {
       statusText: statusOfAuthorization.reason,
     });
   }
+  const unvalidatedBody = InputSchema.safeParse(await request.json());
 
+  if (!unvalidatedBody.success) {
+    return json(unvalidatedBody.error.message, {
+      status: 400,
+      statusText: "Bad Request",
+    } as const);
+  }
+
+  const { prefix } = unvalidatedBody.data;
   const authorizedUserId = statusOfAuthorization.rootAPIKeyRecord.userId;
-  const { apiKey } = await generateAPIKey();
+  const { apiKey } = await generateAPIKey(prefix);
   const apiKeyRec = await storeUserAPIKey({
     apiKey,
     userId: authorizedUserId,
+    prefix,
   });
 
   return json({ apiKey, id: apiKeyRec.id });

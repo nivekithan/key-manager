@@ -47,7 +47,7 @@ export async function action({ request }: ActionArgs) {
     return json(`There is no user api key with id: ${id}`, { status: 400 });
   }
 
-  const { apiKey: newAPIKey } = await rotateUserAPIKey(id);
+  const { apiKey: newAPIKey } = await rotateUserAPIKey(id, userAPIKeyRec.prefix);
 
   return json({ apikey: newAPIKey, id });
 }

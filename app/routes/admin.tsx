@@ -58,7 +58,7 @@ export async function action({ request }: ActionArgs) {
   const action = parseAction.data;
 
   if (action === "generateAPIKey") {
-    const { apiKey } = await generateAPIKey();
+    const { apiKey } = await generateAPIKey("root");
     const apiKeyDoc = await storeRootAPIKey({ userId, apiKey });
 
     if (apiKeyDoc instanceof Error) {

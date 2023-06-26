@@ -15,13 +15,13 @@ export async function getUserRootAPIKeyRecord(userId: string) {
   return res;
 }
 
-export async function generateAPIKey() {
+export async function generateAPIKey(prefix: string) {
   const buf = new Uint8Array(36);
   crypto.getRandomValues(buf);
 
   const apiKey = base58(buf);
 
-  return { apiKey };
+  return { apiKey: `${prefix}_${apiKey}` };
 }
 
 async function hashAPIKey(apiKey: string) {
@@ -57,13 +57,15 @@ export async function storeRootAPIKey({
 export async function storeUserAPIKey({
   apiKey,
   userId,
+  prefix,
 }: {
   apiKey: string;
   userId: string;
+  prefix: string;
 }) {
   const { hash, salt } = await hashAPIKey(apiKey);
   const apiKeyRecord = await prisma.userAPIKey.create({
-    data: { createdByUser: userId, hash, salt },
+    data: { createdByUser: userId, hash, salt, prefix },
   });
 
   return apiKeyRecord;
@@ -111,8 +113,8 @@ export async function getUserAPIKeyRecordById(id: string, userId: string) {
   return apiKeyRecord;
 }
 
-export async function rotateUserAPIKey(id: string) {
-  const { apiKey } = await generateAPIKey();
+export async function rotateUserAPIKey(id: string, prefix: string) {
+  const { apiKey } = await generateAPIKey(prefix);
   const { hash, salt } = await hashAPIKey(apiKey);
 
   await prisma.userAPIKey.update({

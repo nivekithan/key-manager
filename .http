@@ -1,25 +1,29 @@
 POST http://localhost:3000/api/v1/keys
-Authorization: Bearer 2AFtz7vapwkbFj65axKyxnV8tFQW8Yg7MdswT5Su36ts8oNhG3
-
-###
-POST http://localhost:3000/api/v1/keys/verify
-Authorization: Bearer 2AFtz7vapwkbFj65axKyxnV8tFQW8Yg7MdswT5Su36ts8oNhG3
+Authorization: Bearer root_2DBL1VMnM1cUNS2VGuF1GcWpq5T1k1rQ32FivgxvrsbQj7ZHdN 
 Content-Type: application/json
 
 {
-    "apiKey" : "2teKQzykjbBG2imLJxSrhBAvKanSJc6N2DfgeYRnJVeptgSXTw",
+ "prefix" : "user"
+}
+###
+POST http://localhost:3000/api/v1/keys/verify
+Authorization: Bearer root_2DBL1VMnM1cUNS2VGuF1GcWpq5T1k1rQ32FivgxvrsbQj7ZHdN
+Content-Type: application/json
+
+{
+    "apiKey" : "user_2sSdU8BoFSfJYcrcRBYRG4PwicwaWT3yNV5xV9vaeioS5xKZ4z",
     "endpoint" : "CREATE_USER",
     "variables" : ["USER_ID", "CHANNEL_ID"],
     "duration" : 60000,
-    "maxReq" : 4
+    "maxReq" : 4 
 }
 
 ###
 
 POST http://localhost:3000/api/v1/keys/rotate
-Authorization: Bearer 2AFtz7vapwkbFj65axKyxnV8tFQW8Yg7MdswT5Su36ts8oNhG3
+Authorization: Bearer root_2DBL1VMnM1cUNS2VGuF1GcWpq5T1k1rQ32FivgxvrsbQj7ZHdN
 Content-Type: application/json
 
 {
-    "id" : "cljckifx40002zigd2brk61uy"
+    "id" : "cljcoryvl0002zi0upmuq7wxt"
 }
