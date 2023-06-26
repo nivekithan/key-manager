@@ -24,7 +24,7 @@ export async function generateAPIKey() {
   return { apiKey };
 }
 
-async function hashAPIKey(apiKey: string) {
+export async function hashAPIKey(apiKey: string) {
   const hashOfKey = await crypto.subtle.digest(
     "sha-256",
     new TextEncoder().encode(apiKey + SALT)
@@ -76,3 +76,4 @@ export async function getRootAPIKeyRecord(rootAPIKey: string) {
 
   return apiKeyRec;
 }
+

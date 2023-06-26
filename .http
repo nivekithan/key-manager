@@ -1,3 +1,13 @@
 POST http://localhost:3000/api/v1/keys
 Authorization: Bearer 2AFtz7vapwkbFj65axKyxnV8tFQW8Yg7MdswT5Su36ts8oNhG3
 
+###
+POST http://localhost:3000/api/v1/keys/verify
+Authorization: Bearer 2AFtz7vapwkbFj65axKyxnV8tFQW8Yg7MdswT5Su36ts8oNhG3
+Content-Type: application/json
+
+{
+    "apiKey" : "2Tyfv9DgMkcWJ3BPDnraVLFMAVJqMb331F6Dv7x4VpnH4ZR2AQ",
+    "duration" : 60000,
+    "maxReq" : 4
+}
