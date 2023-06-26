@@ -8,6 +8,8 @@ Content-Type: application/json
 
 {
     "apiKey" : "2Tyfv9DgMkcWJ3BPDnraVLFMAVJqMb331F6Dv7x4VpnH4ZR2AQ",
+    "endpoint" : "CREATE_USER",
+    "variables" : ["USER_ID", "CHANNEL_ID"],
     "duration" : 60000,
     "maxReq" : 4
 }

@@ -83,3 +83,17 @@ export async function getUserAPIKeyRecord(userAPIKey: string) {
   const apiKeyRec = await prisma.userAPIKey.findUnique({ where: { hash } });
   return apiKeyRec;
 }
+
+export function generateIDForAPIKey({
+  endpoint,
+  hashAPIKey,
+  variables,
+}: {
+  hashAPIKey: string;
+  endpoint: string;
+  variables: Array<string>;
+}) {
+  const id = `${hashAPIKey}_${endpoint}_${variables.join("_")}`;
+
+  return id;
+}
