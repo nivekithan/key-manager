@@ -47,7 +47,10 @@ export async function action({ request }: ActionArgs) {
   const { apiKey, duration, maxReq, endpoint, variables } =
     unvalidatedBody.data;
 
-  const userAPIKeyRec = await getUserAPIKeyRecord(apiKey);
+  const userAPIKeyRec = await getUserAPIKeyRecord(
+    apiKey,
+    statusOfAuthorization.rootAPIKeyRecord.userId
+  );
 
   if (userAPIKeyRec === null) {
     return json({ shouldProcess: false, reason: "Invalid API Key" } as const);

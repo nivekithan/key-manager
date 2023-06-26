@@ -77,10 +77,15 @@ export async function getRootAPIKeyRecord(rootAPIKey: string) {
   return apiKeyRec;
 }
 
-export async function getUserAPIKeyRecord(userAPIKey: string) {
+export async function getUserAPIKeyRecord(userAPIKey: string, userId: string) {
   const { hash } = await hashAPIKey(userAPIKey);
 
   const apiKeyRec = await prisma.userAPIKey.findUnique({ where: { hash } });
+
+  if (apiKeyRec?.createdByUser !== userId) {
+    return null;
+  }
+
   return apiKeyRec;
 }
 
