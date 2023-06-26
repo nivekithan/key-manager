@@ -9,8 +9,10 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { UserAPIKeyDataTable } from "@/components/userAPIKeyDataTable";
 import {
   generateAPIKey,
+  getPaginatedUserAPIKeys,
   getUserRootAPIKeyRecord,
   storeRootAPIKey,
 } from "@/lib/apiKeys.server";
@@ -21,12 +23,15 @@ import {
   json,
   redirect,
 } from "@remix-run/node";
-import { Form, useActionData, useLoaderData } from "@remix-run/react";
+import { useLoaderData } from "@remix-run/react";
 import { z } from "zod";
 
 export async function loader({ request }: LoaderArgs) {
   const userId = await requireUserId(request);
-  const [apiKey] = await Promise.all([getUserRootAPIKeyRecord(userId)]);
+  const [apiKey, userAPIKeyList] = await Promise.all([
+    getUserRootAPIKeyRecord(userId),
+    getPaginatedUserAPIKeys(userId),
+  ]);
 
   if (apiKey instanceof Error) {
     throw new Response(null, {
@@ -37,7 +42,7 @@ export async function loader({ request }: LoaderArgs) {
 
   const isAPIKeyGenerated = apiKey !== null;
 
-  return json({ isAPIKeyGenerated, apiList: [] });
+  return json({ isAPIKeyGenerated, userAPIKeyList });
 }
 
 export async function action({ request }: ActionArgs) {
@@ -74,40 +79,49 @@ export async function action({ request }: ActionArgs) {
   return redirect(request.url);
 }
 
+// export default function AdminPage() {
+//   const { userAPIKeyList } = useLoaderData<typeof loader>();
+//   const actionData = useActionData<typeof action>();
+//   const isAPIListEmpty = userAPIKeyList.length === 0;
+//   const apiKey = actionData?.success ? actionData.apiKey : null;
+
+//   return (
+//     <main className="min-h-screen grid place-items-center">
+//       <Card className="w-96">
+//         <CardHeader>
+//           <CardTitle>Create new API</CardTitle>
+//           <CardDescription>Each API gets its own token</CardDescription>
+//         </CardHeader>
+//         <CardContent>
+//           <Form>
+//             <Label htmlFor="api-name">Name of the API</Label>
+//             <Input
+//               type="text"
+//               placeholder="my-app-api"
+//               id="api-name"
+//               name="apiName"
+//             />
+//           </Form>
+//         </CardContent>
+//         <CardFooter className="flex">
+//           <Button>Generate</Button>
+//         </CardFooter>
+//       </Card>
+//       <h1>{apiKey}</h1>
+//       <Form method="POST">
+//         <button type="submit" name="action" value="generateAPIKey">
+//           Generate API Key
+//         </button>
+//       </Form>
+//     </main>
+//   );
+// }
 export default function AdminPage() {
-  const { apiList } = useLoaderData<typeof loader>();
-  const actionData = useActionData<typeof action>();
-  const isAPIListEmpty = apiList.length === 0;
-  const apiKey = actionData?.success ? actionData.apiKey : null;
+  const { userAPIKeyList } = useLoaderData<typeof loader>();
 
   return (
-    <main className="min-h-screen grid place-items-center">
-      <Card className="w-96">
-        <CardHeader>
-          <CardTitle>Create new API</CardTitle>
-          <CardDescription>Each API gets its own token</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form>
-            <Label htmlFor="api-name">Name of the API</Label>
-            <Input
-              type="text"
-              placeholder="my-app-api"
-              id="api-name"
-              name="apiName"
-            />
-          </Form>
-        </CardContent>
-        <CardFooter className="flex">
-          <Button>Generate</Button>
-        </CardFooter>
-      </Card>
-      <h1>{apiKey}</h1>
-      <Form method="POST">
-        <button type="submit" name="action" value="generateAPIKey">
-          Generate API Key
-        </button>
-      </Form>
-    </main>
+    <div className="container mx-auto py-10">
+      <UserAPIKeyDataTable userAPIKeyList={userAPIKeyList} />
+    </div>
   );
 }

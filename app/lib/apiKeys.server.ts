@@ -1,3 +1,4 @@
+import { type userAPIKey } from "@prisma/client";
 import { base58 } from "./util/baseX.server";
 import { SALT } from "./util/constants";
 import { prisma } from "./util/prisma.server";
@@ -124,3 +125,29 @@ export async function rotateUserAPIKey(id: string, prefix: string) {
 
   return { apiKey };
 }
+
+export async function getPaginatedUserAPIKeys(userId: string) {
+  const apiKeyList = await prisma.userAPIKey.findMany({
+    where: { createdByUser: userId },
+  });
+
+  return apiKeyList.map(whitelabelUserAPIKeyRecord);
+}
+
+function whitelabelUserAPIKeyRecord(
+  apiKeyRecord: userAPIKey
+): WUserAPIKey {
+  return {
+    id: apiKeyRecord.id,
+    prefix: apiKeyRecord.prefix,
+    createdAt: apiKeyRecord.createdAt.toString(),
+    updatedAt: apiKeyRecord.updatedAt.toString(),
+  };
+}
+
+export type WUserAPIKey = {
+  id: string;
+  prefix: string;
+  createdAt: string;
+  updatedAt: string;
+};

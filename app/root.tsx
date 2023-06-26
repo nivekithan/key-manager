@@ -8,6 +8,7 @@ import {
   ScrollRestoration,
 } from "@remix-run/react";
 import stylesheet from "@/globals.css";
+import { Toaster } from "./components/ui/toaster";
 
 export const links: LinksFunction = () => [
   { rel: "stylesheet", href: stylesheet },
@@ -23,7 +24,9 @@ export default function App() {
         <Links />
       </head>
       <body>
+
         <Outlet />
+        <Toaster />
         <ScrollRestoration />
         <script src="https://psg.so/web.js"></script>
         <Scripts />
