@@ -26,10 +26,10 @@ export async function action({ request }: ActionArgs) {
 
   const authorizedUserId = statusOfAuthorization.rootAPIKeyRecord.userId;
   const { apiKey } = await generateAPIKey();
-  await storeUserAPIKey({
+  const apiKeyRec = await storeUserAPIKey({
     apiKey,
     userId: authorizedUserId,
   });
 
-  return json({ apiKey });
+  return json({ apiKey, id: apiKeyRec.id });
 }
