@@ -1,19 +1,27 @@
-import { generateAPIKey, storeUserAPIKey } from "@/lib/apiKeys.server";
+import {
+  deleteUserAPIKey,
+  generateAPIKey,
+  getUserAPIKeyRecordById,
+  storeUserAPIKey,
+} from "@/lib/apiKeys.server";
 import { authorizeAPIRequest } from "@/lib/auth.server";
 import { json, type ActionArgs } from "@remix-run/node";
 import { z } from "zod";
 
-const InputSchema = z.object({ prefix: z.string() });
+const CreateKeySchema = z.object({ prefix: z.string() });
+const DeleteKeySchema = z.object({ id: z.string() });
+
 /**
+ *
  * Creates new user apiKey
  */
 export async function action({ request }: ActionArgs) {
   const method = request.method;
 
-  if (method !== "POST") {
+  if (method !== "POST" && method !== "DELETE") {
     return new Response(null, {
       status: 405,
-      headers: { Allow: "POST" },
+      headers: { Allow: "POST,DELETE" },
       statusText: `Method ${method} not allowed`,
     });
   }
@@ -25,23 +33,56 @@ export async function action({ request }: ActionArgs) {
       statusText: statusOfAuthorization.reason,
     });
   }
-  const unvalidatedBody = InputSchema.safeParse(await request.json());
 
-  if (!unvalidatedBody.success) {
-    return json(unvalidatedBody.error.message, {
-      status: 400,
-      statusText: "Bad Request",
+  const authorizedUserId = statusOfAuthorization.rootAPIKeyRecord.userId;
+
+  if (method === "POST") {
+    const unvalidatedBody = CreateKeySchema.safeParse(await request.json());
+
+    if (!unvalidatedBody.success) {
+      return json(unvalidatedBody.error.message, {
+        status: 400,
+        statusText: "Bad Request",
+      } as const);
+    }
+
+    const { prefix } = unvalidatedBody.data;
+    const { apiKey } = await generateAPIKey(prefix);
+    const apiKeyRec = await storeUserAPIKey({
+      apiKey,
+      userId: authorizedUserId,
+      prefix,
+    });
+
+    return json({ apiKey, id: apiKeyRec.id });
+  } else if (method === "DELETE") {
+    const unvalidatedBody = DeleteKeySchema.safeParse(await request.json());
+
+    if (!unvalidatedBody.success) {
+      return json(unvalidatedBody.error.message, {
+        status: 400,
+        statusText: "Bad Request",
+      } as const);
+    }
+
+    const { id } = unvalidatedBody.data;
+
+    const userAPIKeyRec = await getUserAPIKeyRecordById(id, authorizedUserId);
+
+    if (userAPIKeyRec === null) {
+      return json(
+        {
+          success: false,
+          reason: `There is no userAPIKey with id: ${id}`,
+        } as const,
+        { status: 400 }
+      );
+    }
+
+    await deleteUserAPIKey(id);
+
+    return json({
+      id,
     } as const);
   }
-
-  const { prefix } = unvalidatedBody.data;
-  const authorizedUserId = statusOfAuthorization.rootAPIKeyRecord.userId;
-  const { apiKey } = await generateAPIKey(prefix);
-  const apiKeyRec = await storeUserAPIKey({
-    apiKey,
-    userId: authorizedUserId,
-    prefix,
-  });
-
-  return json({ apiKey, id: apiKeyRec.id });
 }

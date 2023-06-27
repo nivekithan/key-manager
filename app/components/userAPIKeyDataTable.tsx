@@ -4,7 +4,7 @@ import {
   type ColumnDef,
   getCoreRowModel,
   flexRender,
-  Row,
+  type Row,
 } from "@tanstack/react-table";
 import {
   TableBody,

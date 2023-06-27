@@ -19,11 +19,19 @@ Content-Type: application/json
 }
 
 ###
-
 POST http://localhost:3000/api/v1/keys/rotate
 Authorization: Bearer root_2DBL1VMnM1cUNS2VGuF1GcWpq5T1k1rQ32FivgxvrsbQj7ZHdN
 Content-Type: application/json
 
 {
     "id" : "cljcoryvl0002zi0upmuq7wxt"
+}
+
+###
+DELETE http://localhost:3000/api/v1/keys
+Authorization: Bearer root_2DBL1VMnM1cUNS2VGuF1GcWpq5T1k1rQ32FivgxvrsbQj7ZHdN 
+Content-Type: application/json
+
+{
+ "id" : "clje52ccu0006zimh7b9nnguc"
 }
