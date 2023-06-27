@@ -1,8 +1,9 @@
-import { type userAPIKey } from "@prisma/client";
+import { type apiKeyRole, type userAPIKey } from "@prisma/client";
 import { base58 } from "./util/baseX.server";
 import { SALT } from "./util/constants";
 import { prisma } from "./util/prisma.server";
 import crypto from "node:crypto";
+import { type InputRatelimit } from "@/routes/api.v1.keys.verify";
 
 export async function getUserRootAPIKeyRecord(userId: string) {
   const res = await prisma.rootAPIKey
@@ -59,14 +60,33 @@ export async function storeUserAPIKey({
   apiKey,
   userId,
   prefix,
+  roles,
 }: {
   apiKey: string;
   userId: string;
   prefix: string;
+  roles?: Array<string>;
 }) {
   const { hash, salt } = await hashAPIKey(apiKey);
   const apiKeyRecord = await prisma.userAPIKey.create({
-    data: { createdByUser: userId, hash, salt, prefix },
+    data: {
+      createdByUser: userId,
+      hash,
+      salt,
+      prefix,
+      roles: roles
+        ? {
+            createMany: {
+              data: roles.map((name) => {
+                return { createdByUser: userId, name };
+              }),
+            },
+          }
+        : undefined,
+    },
+    include: {
+      roles: true,
+    },
   });
 
   return apiKeyRecord;
@@ -83,7 +103,10 @@ export async function getRootAPIKeyRecord(rootAPIKey: string) {
 export async function getUserAPIKeyRecord(userAPIKey: string, userId: string) {
   const { hash } = await hashAPIKey(userAPIKey);
 
-  const apiKeyRec = await prisma.userAPIKey.findUnique({ where: { hash } });
+  const apiKeyRec = await prisma.userAPIKey.findUnique({
+    where: { hash },
+    include: { roles: true },
+  });
 
   if (apiKeyRec?.createdByUser !== userId) {
     return null;
@@ -147,6 +170,47 @@ function whitelabelUserAPIKeyRecord(apiKeyRecord: userAPIKey): WUserAPIKey {
     createdAt: apiKeyRecord.createdAt.toString(),
     updatedAt: apiKeyRecord.updatedAt.toString(),
   };
+}
+
+export function findRatelimitToUse(
+  ratelimit: InputRatelimit,
+  roles: Array<apiKeyRole>
+) {
+  if (roles.length === 0) {
+    return ratelimit.DEFAULT;
+  }
+
+  let ratelimitByRole: null | InputRatelimit["DEFAULT"] = null;
+
+  roles.forEach(({ name }) => {
+    const currentRatelimit = ratelimit[name] as
+      | InputRatelimit["DEFAULT"]
+      | undefined;
+
+    if (!currentRatelimit) {
+      return;
+    }
+
+    if (ratelimitByRole === null) {
+      ratelimitByRole = { ...currentRatelimit };
+    }
+
+    const isCurrentRatelimitAllowsMoreRequest =
+      currentRatelimit.maxReq / currentRatelimit.duration >
+      ratelimitByRole.maxReq / ratelimitByRole.duration;
+
+    if (!isCurrentRatelimitAllowsMoreRequest) {
+      return;
+    }
+
+    ratelimitByRole = currentRatelimit;
+  });
+
+  if (ratelimitByRole === null) {
+    return ratelimit.DEFAULT;
+  }
+
+  return ratelimitByRole;
 }
 
 export type WUserAPIKey = {

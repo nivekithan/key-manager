@@ -8,7 +8,11 @@ import { authorizeAPIRequest } from "@/lib/auth.server";
 import { json, type ActionArgs } from "@remix-run/node";
 import { z } from "zod";
 
-const CreateKeySchema = z.object({ prefix: z.string() });
+const CreateKeySchema = z.object({
+  prefix: z.string(),
+  roles: z.array(z.string()).optional(),
+});
+
 const DeleteKeySchema = z.object({ id: z.string() });
 
 /**
@@ -46,15 +50,20 @@ export async function action({ request }: ActionArgs) {
       } as const);
     }
 
-    const { prefix } = unvalidatedBody.data;
+    const { prefix, roles } = unvalidatedBody.data;
     const { apiKey } = await generateAPIKey(prefix);
     const apiKeyRec = await storeUserAPIKey({
       apiKey,
       userId: authorizedUserId,
       prefix,
+      roles,
     });
 
-    return json({ apiKey, id: apiKeyRec.id });
+    return json({
+      apiKey,
+      id: apiKeyRec.id,
+      roles: apiKeyRec.roles.map((v) => v.name),
+    });
   } else if (method === "DELETE") {
     const unvalidatedBody = DeleteKeySchema.safeParse(await request.json());
 

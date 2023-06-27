@@ -1,19 +1,35 @@
-import { generateIDForAPIKey, getUserAPIKeyRecord } from "@/lib/apiKeys.server";
+import {
+  findRatelimitToUse,
+  generateIDForAPIKey,
+  getUserAPIKeyRecord,
+} from "@/lib/apiKeys.server";
 import { authorizeAPIRequest } from "@/lib/auth.server";
 import { rateLimiter } from "@/lib/util/ratelimiter.server";
 import { json, type ActionArgs } from "@remix-run/node";
 import { z } from "zod";
 
+const RatelimitSchema = z.object({
+  maxReq: z
+    .number()
+    .positive()
+    .int(`maxRequests accepts only positive integers`),
+  duration: z
+    .number()
+    .positive()
+    .int("duration accepts only positive integers"),
+});
+
 const InputSchema = z.object({
   apiKey: z.string().nonempty(),
   endpoint: z.string().nonempty(),
   variables: z.array(z.string()),
-  duration: z
-    .number()
-    .positive()
-    .int("Duration accepts only positive integers "),
-  maxReq: z.number().positive().int("Requests accepts only positive integers"),
+  ratelimits: z.intersection(
+    z.object({ DEFAULT: RatelimitSchema }),
+    z.record(z.string(), RatelimitSchema)
+  ),
 });
+
+export type InputRatelimit = z.infer<typeof InputSchema>["ratelimits"];
 
 export async function action({ request }: ActionArgs) {
   const method = request.method;
@@ -44,8 +60,7 @@ export async function action({ request }: ActionArgs) {
     } as const);
   }
 
-  const { apiKey, duration, maxReq, endpoint, variables } =
-    unvalidatedBody.data;
+  const { apiKey, ratelimits, endpoint, variables } = unvalidatedBody.data;
 
   const userAPIKeyRec = await getUserAPIKeyRecord(
     apiKey,
@@ -55,6 +70,9 @@ export async function action({ request }: ActionArgs) {
   if (userAPIKeyRec === null) {
     return json({ shouldProcess: false, reason: "Invalid API Key" } as const);
   }
+
+  const apiKeyRoles = userAPIKeyRec.roles;
+  const { duration, maxReq } = findRatelimitToUse(ratelimits, apiKeyRoles);
 
   const limit = await rateLimiter.get({
     duration,

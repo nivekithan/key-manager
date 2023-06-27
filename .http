@@ -3,7 +3,8 @@ Authorization: Bearer root_2DBL1VMnM1cUNS2VGuF1GcWpq5T1k1rQ32FivgxvrsbQj7ZHdN
 Content-Type: application/json
 
 {
- "prefix" : "user"
+ "prefix" : "user",
+ "roles" : ["ROLE", "ROLE_1"] 
 }
 ###
 POST http://localhost:3000/api/v1/keys/verify
@@ -11,11 +12,23 @@ Authorization: Bearer root_2DBL1VMnM1cUNS2VGuF1GcWpq5T1k1rQ32FivgxvrsbQj7ZHdN
 Content-Type: application/json
 
 {
-    "apiKey" : "user_2sSdU8BoFSfJYcrcRBYRG4PwicwaWT3yNV5xV9vaeioS5xKZ4z",
+    "apiKey" : "user_4NAEvMWEkEDDrhwpRs6P6diYYQ9SunuYrfajuw98fS9ogh2zx",
     "endpoint" : "CREATE_USER",
     "variables" : ["USER_ID", "CHANNEL_ID"],
-    "duration" : 60000,
-    "maxReq" : 4 
+    "ratelimits" : {
+        "DEFAULT" : {
+            "duration" : 60000,
+            "maxReq" : 10
+        },
+        "ROLE" : {
+            "duration": 60000,
+            "maxReq" : 10
+        },
+        "ROLE_1" : {
+            "duration": 60000,
+            "maxReq" : 5
+        }
+    }
 }
 
 ###

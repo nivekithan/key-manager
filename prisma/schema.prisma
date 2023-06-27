@@ -26,7 +26,21 @@ model userAPIKey {
   hash String @unique
   salt String 
   prefix String
+  roles apiKeyRole[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model apiKeyRole {
+  id String @id @default(cuid())
+  createdByUser String 
+  name String
+  apiKey userAPIKey @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
+  apiKeyId String
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([name, apiKeyId])
 }
