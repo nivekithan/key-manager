@@ -134,9 +134,13 @@ export async function getPaginatedUserAPIKeys(userId: string) {
   return apiKeyList.map(whitelabelUserAPIKeyRecord);
 }
 
-function whitelabelUserAPIKeyRecord(
-  apiKeyRecord: userAPIKey
-): WUserAPIKey {
+export async function deleteUserAPIKey(id: string) {
+  const deletedRecord = await prisma.userAPIKey.delete({ where: { id } });
+
+  return deletedRecord;
+}
+
+function whitelabelUserAPIKeyRecord(apiKeyRecord: userAPIKey): WUserAPIKey {
   return {
     id: apiKeyRecord.id,
     prefix: apiKeyRecord.prefix,

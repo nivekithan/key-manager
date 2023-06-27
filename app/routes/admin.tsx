@@ -11,6 +11,7 @@
 // import { Label } from "@/components/ui/label";
 import { UserAPIKeyDataTable } from "@/components/userAPIKeyDataTable";
 import {
+  deleteUserAPIKey,
   generateAPIKey,
   getPaginatedUserAPIKeys,
   getUserAPIKeyRecordById,
@@ -72,7 +73,11 @@ export async function action({ request }: ActionArgs) {
   const formData = await request.formData();
 
   const parseAction = z
-    .union([z.literal("generateAPIKey"), z.literal("rotateAPIKey")])
+    .union([
+      z.literal("generateAPIKey"),
+      z.literal("rotateAPIKey"),
+      z.literal("deleteAPIKey"),
+    ])
     .safeParse(formData.get("action"));
 
   if (!parseAction.success) {
@@ -136,6 +141,42 @@ export async function action({ request }: ActionArgs) {
       action: "rotateAPIKey",
       id: userAPIKeyId,
       loaderRevalidate: false,
+    } as const);
+  } else if (action === "deleteAPIKey") {
+    const parseUserAPIKeyIdField = z
+      .string()
+      .safeParse(formData.get("userAPIKeyId"));
+
+    if (!parseUserAPIKeyIdField.success) {
+      return json(
+        {
+          success: false,
+          reason: parseUserAPIKeyIdField.error.message,
+        } as const,
+        { status: 400 }
+      );
+    }
+
+    const userAPIKeyId = parseUserAPIKeyIdField.data;
+
+    const userAPIKeyRec = await getUserAPIKeyRecordById(userAPIKeyId, userId);
+
+    if (userAPIKeyRec === null) {
+      return json(
+        {
+          success: false,
+          reason: `There is no userAPIKey with id: ${userAPIKeyId}`,
+        } as const,
+        { status: 400 }
+      );
+    }
+
+    await deleteUserAPIKey(userAPIKeyId);
+
+    return json({
+      success: true,
+      action: "deleteAPIKey",
+      id: userAPIKeyId,
     } as const);
   }
 

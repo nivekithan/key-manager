@@ -22,7 +22,7 @@ import {
   TooltipTrigger,
 } from "./ui/tooltip";
 import { Copy } from "./icons/copy";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { toast, useToast } from "./ui/use-toast";
 import {
   Dialog,
@@ -84,13 +84,14 @@ const columns: ColumnDef<WUserAPIKey>[] = [
     id: "action",
     cell: function RotateKeyButton({ row }) {
       return (
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-x-4">
           <Dialog>
             <DialogTrigger asChild>
               <Button type="button">Rotate API Key</Button>
             </DialogTrigger>
             <RotateAPIKeyDialog row={row} />
           </Dialog>
+          <DeleteAPIKeyDialog row={row} />
         </div>
       );
     },
@@ -167,6 +168,57 @@ function RotateAPIKeyDialog({ row }: { row: Row<WUserAPIKey> }) {
         </rotateAPIKeyFetcher.Form>
       )}
     </DialogContent>
+  );
+}
+
+function DeleteAPIKeyDialog({ row }: { row: Row<WUserAPIKey> }) {
+  const deleteAPIKeyFetcher = useAdminFetcher();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const isDeleting = deleteAPIKeyFetcher.state === "submitting";
+
+  useEffect(() => {
+    if (isDeleting) {
+      setIsDialogOpen(true);
+      return;
+    }
+    return setIsDialogOpen(false);
+  }, [isDeleting]);
+
+  return (
+    <Dialog open={isDialogOpen} onOpenChange={(open) => setIsDialogOpen(open)}>
+      <DialogTrigger asChild>
+        <Button type="button" variant="destructive">
+          Delete API Key
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Are you sure?</DialogTitle>
+          <DialogDescription>
+            Once the API key is deleted. It cannot be used to make further
+            requests.
+          </DialogDescription>
+          <deleteAPIKeyFetcher.Form method="POST">
+            <input
+              type="text"
+              name="userAPIKeyId"
+              defaultValue={row.original.id}
+              hidden
+            />
+            <Button
+              className="w-full"
+              type="submit"
+              name="action"
+              value="deleteAPIKey"
+              variant="destructive"
+            >
+              {isDeleting ? "Deleting API Key..." : "Delete API Key"}
+            </Button>
+          </deleteAPIKeyFetcher.Form>
+        </DialogHeader>
+      </DialogContent>
+    </Dialog>
   );
 }
 
