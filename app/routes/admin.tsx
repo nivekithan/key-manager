@@ -1,19 +1,21 @@
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+// import { Button } from "@/components/ui/button";
+// import {
+//   Card,
+//   CardContent,
+//   CardDescription,
+//   CardFooter,
+//   CardHeader,
+//   CardTitle,
+// } from "@/components/ui/card";
+// import { Input } from "@/components/ui/input";
+// import { Label } from "@/components/ui/label";
 import { UserAPIKeyDataTable } from "@/components/userAPIKeyDataTable";
 import {
   generateAPIKey,
   getPaginatedUserAPIKeys,
+  getUserAPIKeyRecordById,
   getUserRootAPIKeyRecord,
+  rotateUserAPIKey,
   storeRootAPIKey,
 } from "@/lib/apiKeys.server";
 import { requireUserId } from "@/lib/auth.server";
@@ -23,8 +25,28 @@ import {
   json,
   redirect,
 } from "@remix-run/node";
-import { useLoaderData } from "@remix-run/react";
+import {
+  type ShouldRevalidateFunction,
+  useActionData,
+  useFetcher,
+  useLoaderData,
+} from "@remix-run/react";
 import { z } from "zod";
+
+export const shouldRevalidate: ShouldRevalidateFunction = ({
+  actionResult,
+  defaultShouldRevalidate,
+}) => {
+  if (
+    actionResult &&
+    "loaderRevalidate" in actionResult &&
+    !actionResult.loaderRevalidate
+  ) {
+    return false;
+  }
+
+  return defaultShouldRevalidate;
+};
 
 export async function loader({ request }: LoaderArgs) {
   const userId = await requireUserId(request);
@@ -50,7 +72,7 @@ export async function action({ request }: ActionArgs) {
   const formData = await request.formData();
 
   const parseAction = z
-    .literal("generateAPIKey")
+    .union([z.literal("generateAPIKey"), z.literal("rotateAPIKey")])
     .safeParse(formData.get("action"));
 
   if (!parseAction.success) {
@@ -73,10 +95,71 @@ export async function action({ request }: ActionArgs) {
       });
     }
 
-    return json({ success: true, apiKey } as const);
+    return json({ success: true, apiKey, action: "generateAPIKey" } as const);
+  } else if (action === "rotateAPIKey") {
+    const parseUserAPIKeyIdField = z
+      .string()
+      .safeParse(formData.get("userAPIKeyId"));
+
+    if (!parseUserAPIKeyIdField.success) {
+      return json(
+        {
+          success: false,
+          reason: parseUserAPIKeyIdField.error.message,
+        } as const,
+        { status: 400 }
+      );
+    }
+
+    const userAPIKeyId = parseUserAPIKeyIdField.data;
+
+    const userAPIKeyRec = await getUserAPIKeyRecordById(userAPIKeyId, userId);
+
+    if (userAPIKeyRec === null) {
+      return json(
+        {
+          success: false,
+          reason: `There is no userAPIKey with id: ${userAPIKeyId}`,
+        } as const,
+        { status: 400 }
+      );
+    }
+
+    const { apiKey: newAPIKey } = await rotateUserAPIKey(
+      userAPIKeyId,
+      userAPIKeyRec.prefix
+    );
+
+    return json({
+      success: true,
+      apiKey: newAPIKey,
+      action: "rotateAPIKey",
+      id: userAPIKeyId,
+      loaderRevalidate: false,
+    } as const);
   }
 
   return redirect(request.url);
+}
+
+export function useAdminFetcher() {
+  const fetcher = useFetcher<typeof action>();
+  return fetcher;
+}
+
+export function useRotateAPIKeyActionData(id: string) {
+  const actionData = useActionData<typeof action>();
+
+  if (
+    !actionData ||
+    !actionData.success ||
+    actionData.action !== "rotateAPIKey" ||
+    actionData.id !== id
+  ) {
+    return null;
+  }
+
+  return actionData;
 }
 
 // export default function AdminPage() {
