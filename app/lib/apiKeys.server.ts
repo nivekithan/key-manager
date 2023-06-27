@@ -132,6 +132,7 @@ export function generateIDForAPIKey({
 export async function getUserAPIKeyRecordById(id: string, userId: string) {
   const apiKeyRecord = await prisma.userAPIKey.findFirst({
     where: { id, createdByUser: userId },
+    include: { roles: true },
   });
 
   return apiKeyRecord;
@@ -161,6 +162,37 @@ export async function deleteUserAPIKey(id: string) {
   const deletedRecord = await prisma.userAPIKey.delete({ where: { id } });
 
   return deletedRecord;
+}
+
+export async function addRolesToUserAPIKey({
+  id,
+  roles,
+  userId,
+}: {
+  id: string;
+  roles: Array<string>;
+  userId: string;
+}) {
+  const { count } = await prisma.apiKeyRole.createMany({
+    data: roles.map((name) => {
+      return { apiKeyId: id, createdByUser: userId, name };
+    }),
+  });
+
+  return count;
+}
+export async function removeRolesToUserAPIKey({
+  id,
+  roles,
+}: {
+  id: string;
+  roles: Array<string>;
+}) {
+  const { count } = await prisma.apiKeyRole.deleteMany({
+    where: { apiKeyId: id, name: { in: roles } },
+  });
+
+  return count;
 }
 
 function whitelabelUserAPIKeyRecord(apiKeyRecord: userAPIKey): WUserAPIKey {
