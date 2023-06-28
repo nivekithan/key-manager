@@ -1,10 +1,11 @@
-import { type apiKeyRole, type userAPIKey } from "@prisma/client";
+import { type Prisma, type apiKeyRole, type userAPIKey } from "@prisma/client";
 import { base58 } from "./util/baseX.server";
 import { SALT } from "./util/constants";
 import { prisma } from "./util/prisma.server";
 import crypto from "node:crypto";
 import { type InputRatelimit } from "@/routes/api.v1.keys.verify";
 import { uniqueArray } from "./util/utils";
+import { type SearchQuery } from "./search";
 
 export async function getUserRootAPIKeyRecord(userId: string) {
   const res = await prisma.rootAPIKey
@@ -151,9 +152,54 @@ export async function rotateUserAPIKey(id: string, prefix: string) {
   return { apiKey };
 }
 
-export async function getPaginatedUserAPIKeys(userId: string) {
+export async function getPaginatedUserAPIKeys({
+  search,
+  userId,
+}: {
+  userId: string;
+  search: SearchQuery;
+}) {
+  const allOrClauses: Array<Prisma.userAPIKeyWhereInput> = [];
+
+  const allPrefixQuery = search
+    .filter((v) => v.key === "prefix")
+    .map((v) => v.value);
+
+  if (allPrefixQuery.length !== 0) {
+    allOrClauses.push({ prefix: { in: allPrefixQuery } });
+  }
+
+  const allIdQuery = search
+    .filter((value) => value.key === "id")
+    .map((v) => v.value);
+
+  if (allIdQuery.length !== 0) {
+    allOrClauses.push({ id: { in: allIdQuery } });
+  }
+
+  const allRolesQuery = search
+    .filter((v) => v.key === "roles")
+    .map((v) => v.value);
+
+  if (allRolesQuery.length !== 0) {
+    allOrClauses.push({ roles: { some: { name: { in: allRolesQuery } } } });
+  }
+
+  const allAPIKeyQuery = await Promise.all(
+    search
+      .filter((v) => v.key === "apiKey")
+      .map(async (v) => (await hashAPIKey(v.value)).hash)
+  );
+
+  if (allAPIKeyQuery.length !== 0) {
+    allOrClauses.push({ hash: { in: allAPIKeyQuery } });
+  }
+
   const apiKeyList = await prisma.userAPIKey.findMany({
-    where: { createdByUser: userId },
+    where: {
+      createdByUser: userId,
+      OR: allOrClauses.length === 0 ? undefined : allOrClauses,
+    },
     include: { roles: true },
   });
 

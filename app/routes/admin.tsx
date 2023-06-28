@@ -55,9 +55,15 @@ export const shouldRevalidate: ShouldRevalidateFunction = ({
 
 export async function loader({ request }: LoaderArgs) {
   const userId = await requireUserId(request);
+  const searchQuery = parseSearchQuery(new URL(request.url));
+
+  if (searchQuery === null) {
+    return redirect("/admin");
+  }
+
   const [apiKey, userAPIKeyList] = await Promise.all([
     getUserRootAPIKeyRecord(userId),
-    getPaginatedUserAPIKeys(userId),
+    getPaginatedUserAPIKeys({ search : searchQuery, userId }),
   ]);
 
   if (apiKey instanceof Error) {
@@ -68,11 +74,6 @@ export async function loader({ request }: LoaderArgs) {
   }
 
   const isAPIKeyGenerated = apiKey !== null;
-  const searchQuery = parseSearchQuery(new URL(request.url));
-
-  if (searchQuery === null) {
-    return redirect("/admin");
-  }
 
   return json({ isAPIKeyGenerated, userAPIKeyList, searchQuery });
 }
