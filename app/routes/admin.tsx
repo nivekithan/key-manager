@@ -11,11 +11,14 @@
 // import { Label } from "@/components/ui/label";
 import { UserAPIKeyDataTable } from "@/components/userAPIKeyDataTable";
 import {
+  addRolesToUserAPIKey,
   deleteUserAPIKey,
   generateAPIKey,
   getPaginatedUserAPIKeys,
   getUserAPIKeyRecordById,
   getUserRootAPIKeyRecord,
+  removeRolesToUserAPIKey,
+  rolesToAddAndRemove,
   rotateUserAPIKey,
   storeRootAPIKey,
 } from "@/lib/apiKeys.server";
@@ -28,7 +31,6 @@ import {
 } from "@remix-run/node";
 import {
   type ShouldRevalidateFunction,
-  useActionData,
   useFetcher,
   useLoaderData,
 } from "@remix-run/react";
@@ -77,6 +79,7 @@ export async function action({ request }: ActionArgs) {
       z.literal("generateAPIKey"),
       z.literal("rotateAPIKey"),
       z.literal("deleteAPIKey"),
+      z.literal("editRoles"),
     ])
     .safeParse(formData.get("action"));
 
@@ -178,6 +181,75 @@ export async function action({ request }: ActionArgs) {
       action: "deleteAPIKey",
       id: userAPIKeyId,
     } as const);
+  } else if (action === "editRoles") {
+    const newRolesFormField = z.string().safeParse(formData.get("newRoles"));
+    const userAPIKeyIdField = z
+      .string()
+      .safeParse(formData.get("userAPIKeyId"));
+
+    if (!newRolesFormField.success) {
+      return json(
+        {
+          success: false,
+          reason: newRolesFormField.error.message,
+        } as const,
+        { status: 400 }
+      );
+    }
+
+    if (!userAPIKeyIdField.success) {
+      return json(
+        {
+          success: false,
+          reason: userAPIKeyIdField.error.message,
+        } as const,
+        { status: 400 }
+      );
+    }
+
+    const newRoles = newRolesFormField.data
+      .trim()
+      .split(",")
+      .map((v) => v.trim());
+
+    const userAPIKeyId = userAPIKeyIdField.data;
+
+    const userAPIKeyRec = await getUserAPIKeyRecordById(userAPIKeyId, userId);
+
+    if (userAPIKeyRec === null) {
+      return json(
+        {
+          success: false,
+          reason: `There is no userAPIKey with id: ${userAPIKeyId}`,
+        } as const,
+        { status: 400 }
+      );
+    }
+
+    const originalRoles = userAPIKeyRec.roles.map((v) => v.name);
+
+    const { addRoles, removeRoles } = rolesToAddAndRemove({
+      newRoles,
+      originalRoles,
+    });
+
+    const addedCount = await addRolesToUserAPIKey({
+      id: userAPIKeyId,
+      roles: addRoles,
+      userId,
+    });
+
+    const removedCount = await removeRolesToUserAPIKey({
+      id: userAPIKeyId,
+      roles: removeRoles,
+    });
+
+    return json({
+      action: "editRoles",
+      success: true,
+      addedRoles: addedCount,
+      removedRoles: removedCount,
+    } as const);
   }
 
   return redirect(request.url);
@@ -186,21 +258,6 @@ export async function action({ request }: ActionArgs) {
 export function useAdminFetcher() {
   const fetcher = useFetcher<typeof action>();
   return fetcher;
-}
-
-export function useRotateAPIKeyActionData(id: string) {
-  const actionData = useActionData<typeof action>();
-
-  if (
-    !actionData ||
-    !actionData.success ||
-    actionData.action !== "rotateAPIKey" ||
-    actionData.id !== id
-  ) {
-    return null;
-  }
-
-  return actionData;
 }
 
 // export default function AdminPage() {

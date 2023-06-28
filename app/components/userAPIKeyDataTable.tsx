@@ -33,6 +33,9 @@ import {
   DialogTitle,
 } from "./ui/dialog";
 import { useAdminFetcher } from "@/routes/admin";
+import { Badge } from "./ui/badge";
+import { Label } from "./ui/label";
+import { Input } from "./ui/input";
 
 const columns: ColumnDef<WUserAPIKey>[] = [
   {
@@ -81,13 +84,41 @@ const columns: ColumnDef<WUserAPIKey>[] = [
     },
   },
   {
+    accessorKey: "roles",
+    header: "Roles",
+    cell: ({ row }) => {
+      const roles = row.original.roles;
+      return (
+        <div className="flex flex-wrap gap-x-2">
+          {roles.map((role) => {
+            return (
+              <Badge
+                variant="secondary"
+                key={role}
+                className="max-w-[200px] overflow-hidden text-ellipsis block px-3 py-2 rounded-md text-center"
+              >
+                {role}
+              </Badge>
+            );
+          })}
+          {roles.length === 0
+            ? "API key has no roles associated with it"
+            : null}
+        </div>
+      );
+    },
+  },
+  {
     id: "action",
     cell: function RotateKeyButton({ row }) {
       return (
         <div className="flex justify-end gap-x-4">
+          <EditAPIKeyRoleDialog row={row} />
           <Dialog>
             <DialogTrigger asChild>
-              <Button type="button">Rotate API Key</Button>
+              <Button type="button" variant="outline">
+                Rotate API Key
+              </Button>
             </DialogTrigger>
             <RotateAPIKeyDialog row={row} />
           </Dialog>
@@ -97,6 +128,62 @@ const columns: ColumnDef<WUserAPIKey>[] = [
     },
   },
 ];
+
+function EditAPIKeyRoleDialog({ row }: { row: Row<WUserAPIKey> }) {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const currentRoles = row.original.roles.join(",");
+  const apiKeyId = row.original.id;
+
+  const editRolesFetcher = useAdminFetcher();
+
+  const isEditingRoles = editRolesFetcher.state === "submitting";
+
+  useEffect(() => {
+    if (isEditingRoles) {
+      setIsDialogOpen(true);
+      return;
+    }
+    setIsDialogOpen(false);
+    return;
+  }, [isEditingRoles]);
+
+  return (
+    <Dialog open={isDialogOpen} onOpenChange={(v) => setIsDialogOpen(v)}>
+      <DialogTrigger asChild>
+        <Button variant="outline">Edit Roles</Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Edit Roles</DialogTitle>
+          <DialogDescription>
+            List down the roles of APIKey seperated by comma (whitespace will be
+            ignored)
+          </DialogDescription>
+        </DialogHeader>
+        <editRolesFetcher.Form className="flex flex-col gap-y-4" method="POST">
+          <div className="flex flex-col gap-y-2">
+            <input
+              type="text"
+              defaultValue={apiKeyId}
+              hidden
+              name="userAPIKeyId"
+            />
+            <Label htmlFor="newRoles">Roles</Label>
+            <Input
+              type="text"
+              defaultValue={currentRoles}
+              name="newRoles"
+              id="newRoles"
+            />
+            <Button name="action" value="editRoles" type="submit">
+              {isEditingRoles ? "Editing" : "Edit"}
+            </Button>
+          </div>
+        </editRolesFetcher.Form>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 function RotateAPIKeyDialog({ row }: { row: Row<WUserAPIKey> }) {
   const userAPIKeyId = row.original.id;
@@ -162,6 +249,7 @@ function RotateAPIKeyDialog({ row }: { row: Row<WUserAPIKey> }) {
             className="w-full"
             name="action"
             value="rotateAPIKey"
+            variant="destructive"
           >
             {isRotatingKey ? "Rotating API Key..." : "Rotate API Key"}
           </Button>
@@ -182,7 +270,8 @@ function DeleteAPIKeyDialog({ row }: { row: Row<WUserAPIKey> }) {
       setIsDialogOpen(true);
       return;
     }
-    return setIsDialogOpen(false);
+    setIsDialogOpen(false);
+    return;
   }, [isDeleting]);
 
   return (

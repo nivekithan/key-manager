@@ -4,6 +4,7 @@ import { SALT } from "./util/constants";
 import { prisma } from "./util/prisma.server";
 import crypto from "node:crypto";
 import { type InputRatelimit } from "@/routes/api.v1.keys.verify";
+import { uniqueArray } from "./util/utils";
 
 export async function getUserRootAPIKeyRecord(userId: string) {
   const res = await prisma.rootAPIKey
@@ -153,6 +154,7 @@ export async function rotateUserAPIKey(id: string, prefix: string) {
 export async function getPaginatedUserAPIKeys(userId: string) {
   const apiKeyList = await prisma.userAPIKey.findMany({
     where: { createdByUser: userId },
+    include: { roles: true },
   });
 
   return apiKeyList.map(whitelabelUserAPIKeyRecord);
@@ -195,12 +197,15 @@ export async function removeRolesToUserAPIKey({
   return count;
 }
 
-function whitelabelUserAPIKeyRecord(apiKeyRecord: userAPIKey): WUserAPIKey {
+function whitelabelUserAPIKeyRecord(
+  apiKeyRecord: userAPIKey & { roles: apiKeyRole[] }
+): WUserAPIKey {
   return {
     id: apiKeyRecord.id,
     prefix: apiKeyRecord.prefix,
     createdAt: apiKeyRecord.createdAt.toString(),
     updatedAt: apiKeyRecord.updatedAt.toString(),
+    roles: apiKeyRecord.roles.map((v) => v.name),
   };
 }
 
@@ -245,9 +250,39 @@ export function findRatelimitToUse(
   return ratelimitByRole;
 }
 
+export function rolesToAddAndRemove({
+  newRoles,
+  originalRoles,
+}: {
+  originalRoles: Array<string>;
+  newRoles: Array<string>;
+}) {
+  const originalRolesMap = new Map<string, boolean>();
+
+  originalRoles.forEach((name) => {
+    originalRolesMap.set(name, true);
+  });
+
+  const addRoles = newRoles.filter((name) => !originalRolesMap.has(name));
+
+  const newRolesMap = new Map<string, boolean>();
+
+  newRoles.forEach((name) => {
+    newRolesMap.set(name, true);
+  });
+
+  const removeRoles = originalRoles.filter((name) => !newRolesMap.has(name));
+
+  return {
+    addRoles: uniqueArray(addRoles),
+    removeRoles: uniqueArray(removeRoles),
+  };
+}
+
 export type WUserAPIKey = {
   id: string;
   prefix: string;
   createdAt: string;
   updatedAt: string;
+  roles: Array<string>;
 };
