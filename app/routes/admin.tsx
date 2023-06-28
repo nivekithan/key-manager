@@ -9,6 +9,7 @@
 // } from "@/components/ui/card";
 // import { Input } from "@/components/ui/input";
 // import { Label } from "@/components/ui/label";
+import { APIKeyFilter } from "@/components/apiKeyFilter";
 import { UserAPIKeyDataTable } from "@/components/userAPIKeyDataTable";
 import {
   addRolesToUserAPIKey,
@@ -23,6 +24,7 @@ import {
   storeRootAPIKey,
 } from "@/lib/apiKeys.server";
 import { requireUserId } from "@/lib/auth.server";
+import { parseSearchQuery } from "@/lib/search";
 import {
   type LoaderArgs,
   type ActionArgs,
@@ -66,8 +68,13 @@ export async function loader({ request }: LoaderArgs) {
   }
 
   const isAPIKeyGenerated = apiKey !== null;
+  const searchQuery = parseSearchQuery(new URL(request.url));
 
-  return json({ isAPIKeyGenerated, userAPIKeyList });
+  if (searchQuery === null) {
+    return redirect("/admin");
+  }
+
+  return json({ isAPIKeyGenerated, userAPIKeyList, searchQuery });
 }
 
 export async function action({ request }: ActionArgs) {
@@ -298,10 +305,11 @@ export function useAdminFetcher() {
 //   );
 // }
 export default function AdminPage() {
-  const { userAPIKeyList } = useLoaderData<typeof loader>();
+  const { userAPIKeyList, searchQuery } = useLoaderData<typeof loader>();
 
   return (
-    <div className="container mx-auto py-10">
+    <div className="container mx-auto py-10 flex flex-col gap-y-4">
+      <APIKeyFilter filters={searchQuery} />
       <UserAPIKeyDataTable userAPIKeyList={userAPIKeyList} />
     </div>
   );
