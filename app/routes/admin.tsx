@@ -84,8 +84,12 @@ export async function loader({ request }: LoaderArgs) {
       statusText: "Internal Server Error",
     });
   }
-
   const isAPIKeyGenerated = apiKey !== null;
+
+  if (!isAPIKeyGenerated) {
+    return redirect("/new");
+  }
+
   const isNextPageAvaliable = userAPIKeyList.length >= 11;
 
   if (isNextPageAvaliable) {
@@ -93,7 +97,6 @@ export async function loader({ request }: LoaderArgs) {
   }
 
   return json({
-    isAPIKeyGenerated,
     userAPIKeyList,
     searchQuery,
     nextPageCursor: isNextPageAvaliable
