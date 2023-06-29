@@ -1,5 +1,5 @@
 POST http://localhost:3000/api/v1/keys
-Authorization: Bearer root_2DBL1VMnM1cUNS2VGuF1GcWpq5T1k1rQ32FivgxvrsbQj7ZHdN 
+Authorization: Bearer root_7qvNWUhT2NwWSwPrahqB9P1ENCBkwu3dBhJPoPswhvEELq3MQ 
 Content-Type: application/json
 
 {
