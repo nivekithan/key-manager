@@ -2,6 +2,7 @@ import { redirect } from "@remix-run/node";
 import cookie from "cookie";
 import { passage } from "./util/passage.server";
 import { getRootAPIKeyRecord } from "./apiKeys.server";
+import { errors } from "./errors.server";
 
 export async function requireUserId(request: Request) {
   try {
@@ -85,6 +86,7 @@ export async function authorizeAPIRequest(request: Request) {
   if (authorizationHeader === null) {
     return {
       authorized: false,
+      error: errors.authorizationHeaderNotPresent,
       reason: `Authorization header is not present. Generate api token and pass it in Authorization header with format Bearer <api_token> when making request`,
     } as const;
   }
@@ -94,6 +96,7 @@ export async function authorizeAPIRequest(request: Request) {
   if (apiToken.length === 0) {
     return {
       authorized: false,
+      error: errors.apiTokenNotPresent,
       reason: `API Token is not present in Authorization header. Generate api token and pass it in Authorization header with format Bearer <api_token> when making request`,
     } as const;
   }
@@ -103,6 +106,7 @@ export async function authorizeAPIRequest(request: Request) {
   if (apiKeyRec === null) {
     return {
       authorized: false,
+      error: errors.invalidAPIToken,
       reason: `API Token is not valid. Make sure you have provided correct API token is request`,
     } as const;
   }
