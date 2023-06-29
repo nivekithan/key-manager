@@ -4,6 +4,7 @@ import {
   getUserAPIKeyRecord,
 } from "@/lib/apiKeys.server";
 import { authorizeAPIRequest } from "@/lib/auth.server";
+import { errors } from "@/lib/errors.server";
 import { rateLimiter } from "@/lib/util/ratelimiter.server";
 import { json, type ActionArgs } from "@remix-run/node";
 import { z } from "zod";
@@ -20,7 +21,7 @@ const RatelimitSchema = z.object({
 });
 
 const InputSchema = z.object({
-  apiKey: z.string().nonempty(),
+  apikey: z.string().nonempty(),
   endpoint: z.string().nonempty(),
   variables: z.array(z.string()),
   ratelimits: z.intersection(
@@ -45,30 +46,49 @@ export async function action({ request }: ActionArgs) {
   const statusOfAuthorization = await authorizeAPIRequest(request);
 
   if (!statusOfAuthorization.authorized) {
-    return json(statusOfAuthorization.reason, {
-      status: 401,
-      statusText: statusOfAuthorization.reason,
-    } as const);
+    return json(
+      {
+        success: false,
+        reason: statusOfAuthorization.reason,
+        error: statusOfAuthorization.error,
+      },
+      {
+        status: 401,
+        statusText: statusOfAuthorization.reason,
+      }
+    );
   }
 
   const unvalidatedBody = InputSchema.safeParse(await request.json());
 
   if (!unvalidatedBody.success) {
-    return json(unvalidatedBody.error.message, {
-      status: 400,
-      statusText: "Bad Request",
-    } as const);
+    console.log(unvalidatedBody.error.message);
+    return json(
+      {
+        success: false,
+        error: errors.invalidBody,
+        reason: unvalidatedBody.error.message,
+      },
+      {
+        status: 400,
+        statusText: "Bad Request",
+      } as const
+    );
   }
 
-  const { apiKey, ratelimits, endpoint, variables } = unvalidatedBody.data;
+  const { apikey, ratelimits, endpoint, variables } = unvalidatedBody.data;
 
   const userAPIKeyRec = await getUserAPIKeyRecord(
-    apiKey,
+    apikey,
     statusOfAuthorization.rootAPIKeyRecord.userId
   );
 
   if (userAPIKeyRec === null) {
-    return json({ shouldProcess: false, reason: "Invalid API Key" } as const);
+    return json({
+      success: true,
+      ok: false,
+      keyValid: false,
+    } as const);
   }
 
   const apiKeyRoles = userAPIKeyRec.roles;
@@ -84,20 +104,23 @@ export async function action({ request }: ActionArgs) {
     max: maxReq,
   });
 
-  const shouldProcess = limit.remaining !== 0;
+  const ok = limit.remaining !== 0;
 
-  if (!shouldProcess) {
+  if (!ok) {
     return json({
-      shouldProcess,
+      success: true,
+      ok,
       ...limit,
       remaining: Math.max(0, limit.remaining - 1),
-      reason: "Rate Limit Exceeded",
+      keyValid: true,
     } as const);
   }
 
   return json({
-    shouldProcess,
+    success: true,
+    ok,
     ...limit,
     remaining: Math.max(0, limit.remaining - 1),
+    keyValid: true,
   } as const);
 }

@@ -4,17 +4,27 @@ import {
   DeleteKeyResSchema,
   RemoveRolesSchema,
   RotateKeySchema,
+  VerifyKeySchema,
 } from "./schema.ts";
 
-export type InitKeyManagerOptions = {
-  rootAPIKey: string;
-  url?: string;
+export type Endpoints<EndpointName extends string> = {
+  [name in EndpointName]: {
+    default: { maxReq: number; duration: number };
+    roles?: Record<string, { maxReq: number; duration: number }>;
+  };
 };
 
-export function initKeyManager({
+export type InitKeyManagerOptions<EndpointName extends string> = {
+  rootAPIKey: string;
+  url?: string;
+  endpoints: Endpoints<EndpointName>;
+};
+
+export function initKeyManager<EndpointName extends string>({
   rootAPIKey,
   url = "http://localhost:3000",
-}: InitKeyManagerOptions) {
+  endpoints,
+}: InitKeyManagerOptions<EndpointName>) {
   return {
     async createUserAPIKey(prefix: string, roles?: Array<string>) {
       const res = await fetch(url + "/api/v1/keys", {
@@ -74,6 +84,30 @@ export function initKeyManager({
       const body = await res.json();
 
       return RemoveRolesSchema.parse(body);
+    },
+
+    async verifyUserAPIKey(
+      userAPIKey: string,
+      endpointName: EndpointName,
+      variables: Array<string> = []
+    ) {
+      const ratelimits = endpoints[endpointName];
+      const roles = ratelimits.roles ? ratelimits.roles : {};
+
+      const res = await fetch(url + "/api/v1/keys/verify", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${rootAPIKey}` },
+        body: JSON.stringify({
+          apikey: userAPIKey,
+          endpoint: endpointName,
+          variables,
+          ratelimits: { DEFAULT: ratelimits.default, ...roles },
+        }),
+      });
+
+      const body = await res.json();
+
+      return VerifyKeySchema.parse(body);
     },
   };
 }
