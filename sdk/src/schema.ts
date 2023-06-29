@@ -39,3 +39,12 @@ export const DeleteKeyResSchema = z.union([
   makeErrorZodSchema("invalidBody"),
   makeErrorZodSchema("invalidId"),
 ]);
+
+export const RotateKeySchema = z.union([
+  z.object({ success: z.literal(true), id: z.string(), apikey: z.string() }),
+  makeErrorZodSchema("authorizationHeaderNotPresent"),
+  makeErrorZodSchema("apiTokenNotPresent"),
+  makeErrorZodSchema("invalidAPIToken"),
+  makeErrorZodSchema("invalidBody"),
+  makeErrorZodSchema("invalidId"),
+]);

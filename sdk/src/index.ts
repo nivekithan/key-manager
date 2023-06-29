@@ -1,4 +1,8 @@
-import { CreateKeyResSchema, DeleteKeyResSchema } from "./schema.ts";
+import {
+  CreateKeyResSchema,
+  DeleteKeyResSchema,
+  RotateKeySchema,
+} from "./schema.ts";
 
 export type InitKeyManagerOptions = {
   rootAPIKey: string;
@@ -32,6 +36,18 @@ export function initKeyManager({
       const body = await res.json();
 
       return DeleteKeyResSchema.parse(body);
+    },
+
+    async rotateUserAPIKey(id: string) {
+      const res = await fetch(url + "/api/v1/keys/rotate", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${rootAPIKey}` },
+        body: JSON.stringify({ id }),
+      });
+
+      const body = await res.json();
+
+      return RotateKeySchema.parse(body);
     },
   };
 }
