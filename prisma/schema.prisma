@@ -28,7 +28,7 @@ model userAPIKey {
   prefix String
   roles apiKeyRole[]
 
-  createdAt DateTime @default(now())
+  createdAt DateTime @default(now()) @unique
   updatedAt DateTime @updatedAt
 }
 

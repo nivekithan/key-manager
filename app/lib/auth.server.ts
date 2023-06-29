@@ -31,12 +31,15 @@ export async function getUserId(request: Request) {
     }
 
     const cookieKeyValue = cookie.parse(cookieHeader);
+    console.log(cookieKeyValue);
     const userId = await passage.authenticateRequestWithHeader({
+      // cookies: cookieKeyValue,
       headers: { authorization: `Bearer ${cookieKeyValue.psg_auth_token}` },
     });
 
     return userId;
   } catch (err) {
+    console.log(err);
     return null;
   }
 }

@@ -10,6 +10,8 @@
 // import { Input } from "@/components/ui/input";
 // import { Label } from "@/components/ui/label";
 import { APIKeyFilter } from "@/components/apiKeyFilter";
+import { NewAPIKeyDialog } from "@/components/newAPIKeyDialog";
+import { Button } from "@/components/ui/button";
 import { UserAPIKeyDataTable } from "@/components/userAPIKeyDataTable";
 import {
   addRolesToUserAPIKey,
@@ -22,9 +24,12 @@ import {
   rolesToAddAndRemove,
   rotateUserAPIKey,
   storeRootAPIKey,
+  storeUserAPIKey,
 } from "@/lib/apiKeys.server";
 import { requireUserId } from "@/lib/auth.server";
+import { parseCursorQuery } from "@/lib/cursor";
 import { parseSearchQuery } from "@/lib/search";
+import { uniqueArray } from "@/lib/util/utils";
 import {
   type LoaderArgs,
   type ActionArgs,
@@ -35,6 +40,7 @@ import {
   type ShouldRevalidateFunction,
   useFetcher,
   useLoaderData,
+  useNavigate,
 } from "@remix-run/react";
 import { z } from "zod";
 
@@ -56,6 +62,7 @@ export const shouldRevalidate: ShouldRevalidateFunction = ({
 export async function loader({ request }: LoaderArgs) {
   const userId = await requireUserId(request);
   const searchQuery = parseSearchQuery(new URL(request.url));
+  const cursorQuery = parseCursorQuery(new URL(request.url));
 
   if (searchQuery === null) {
     return redirect("/admin");
@@ -63,7 +70,11 @@ export async function loader({ request }: LoaderArgs) {
 
   const [apiKey, userAPIKeyList] = await Promise.all([
     getUserRootAPIKeyRecord(userId),
-    getPaginatedUserAPIKeys({ search : searchQuery, userId }),
+    getPaginatedUserAPIKeys({
+      search: searchQuery,
+      userId,
+      cursor: cursorQuery,
+    }),
   ]);
 
   if (apiKey instanceof Error) {
@@ -74,8 +85,20 @@ export async function loader({ request }: LoaderArgs) {
   }
 
   const isAPIKeyGenerated = apiKey !== null;
+  const isNextPageAvaliable = userAPIKeyList.length >= 11;
 
-  return json({ isAPIKeyGenerated, userAPIKeyList, searchQuery });
+  if (isNextPageAvaliable) {
+    userAPIKeyList.pop();
+  }
+
+  return json({
+    isAPIKeyGenerated,
+    userAPIKeyList,
+    searchQuery,
+    nextPageCursor: isNextPageAvaliable
+      ? userAPIKeyList.at(-1)?.createdAt
+      : null,
+  });
 }
 
 export async function action({ request }: ActionArgs) {
@@ -84,10 +107,11 @@ export async function action({ request }: ActionArgs) {
 
   const parseAction = z
     .union([
-      z.literal("generateAPIKey"),
+      z.literal("generateRootAPIKey"),
       z.literal("rotateAPIKey"),
       z.literal("deleteAPIKey"),
       z.literal("editRoles"),
+      z.literal("newUserAPIKey"),
     ])
     .safeParse(formData.get("action"));
 
@@ -100,7 +124,7 @@ export async function action({ request }: ActionArgs) {
 
   const action = parseAction.data;
 
-  if (action === "generateAPIKey") {
+  if (action === "generateRootAPIKey") {
     const { apiKey } = await generateAPIKey("root");
     const apiKeyDoc = await storeRootAPIKey({ userId, apiKey });
 
@@ -258,6 +282,58 @@ export async function action({ request }: ActionArgs) {
       addedRoles: addedCount,
       removedRoles: removedCount,
     } as const);
+  } else if (action === "newUserAPIKey") {
+    const prefixField = z
+      .string()
+      .trim()
+      .nonempty()
+      .safeParse(formData.get("prefix"));
+
+    const rolesField = z
+      .string()
+      .trim()
+      .optional()
+      .safeParse(formData.get("roles"));
+
+    if (!prefixField.success) {
+      return json(
+        {
+          success: false,
+          reason: prefixField.error.message,
+        } as const,
+        { status: 400 }
+      );
+    }
+
+    if (!rolesField.success) {
+      return json(
+        {
+          success: false,
+          reason: rolesField.error.message,
+        } as const,
+        { status: 400 }
+      );
+    }
+
+    const prefix = prefixField.data;
+    const roles = rolesField.data;
+
+    const { apiKey: newAPIKey } = await generateAPIKey(prefix);
+    const userAPIKeyRecord = await storeUserAPIKey({
+      apiKey: newAPIKey,
+      prefix,
+      userId,
+      roles: roles
+        ? uniqueArray(roles.split(",").map((v) => v.trim()))
+        : undefined,
+    });
+
+    return json({
+      success: true,
+      apiKey: newAPIKey,
+      id: userAPIKeyRecord.id,
+      action,
+    } as const);
   }
 
   return redirect(request.url);
@@ -306,11 +382,33 @@ export function useAdminFetcher() {
 //   );
 // }
 export default function AdminPage() {
-  const { userAPIKeyList, searchQuery } = useLoaderData<typeof loader>();
+  const { userAPIKeyList, searchQuery, nextPageCursor } =
+    useLoaderData<typeof loader>();
+  const navigate = useNavigate();
 
   return (
     <div className="container mx-auto py-10 flex flex-col gap-y-4">
-      <APIKeyFilter filters={searchQuery} />
+      <div className="flex justify-between">
+        <APIKeyFilter filters={searchQuery} />
+        <div className="flex gap-x-4">
+          <NewAPIKeyDialog />
+          <Button
+            type="button"
+            onClick={() => {
+              if (nextPageCursor) {
+                const currentUrl = new URL(window.location.href);
+                currentUrl.searchParams.set("cursor", nextPageCursor);
+                navigate(currentUrl.pathname + currentUrl.search);
+                return;
+              }
+            }}
+            disabled={nextPageCursor === null || nextPageCursor === undefined}
+            variant="outline"
+          >
+            Next Page
+          </Button>
+        </div>
+      </div>
       <UserAPIKeyDataTable userAPIKeyList={userAPIKeyList} />
     </div>
   );

@@ -155,9 +155,11 @@ export async function rotateUserAPIKey(id: string, prefix: string) {
 export async function getPaginatedUserAPIKeys({
   search,
   userId,
+  cursor,
 }: {
   userId: string;
   search: SearchQuery;
+  cursor: string | null;
 }) {
   const allOrClauses: Array<Prisma.userAPIKeyWhereInput> = [];
 
@@ -201,6 +203,10 @@ export async function getPaginatedUserAPIKeys({
       OR: allOrClauses.length === 0 ? undefined : allOrClauses,
     },
     include: { roles: true },
+    orderBy: { createdAt: "desc" },
+    cursor: cursor ? { createdAt: cursor } : undefined,
+    take: 11,
+    skip: cursor ? 1 : undefined,
   });
 
   return apiKeyList.map(whitelabelUserAPIKeyRecord);
@@ -249,8 +255,8 @@ function whitelabelUserAPIKeyRecord(
   return {
     id: apiKeyRecord.id,
     prefix: apiKeyRecord.prefix,
-    createdAt: apiKeyRecord.createdAt.toString(),
-    updatedAt: apiKeyRecord.updatedAt.toString(),
+    createdAt: apiKeyRecord.createdAt.toISOString(),
+    updatedAt: apiKeyRecord.updatedAt.toISOString(),
     roles: apiKeyRecord.roles.map((v) => v.name),
   };
 }

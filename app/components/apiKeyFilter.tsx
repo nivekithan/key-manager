@@ -17,6 +17,7 @@ import {
   parseSearchQuery,
   removeSeachQuery,
 } from "@/lib/search";
+import { resetCursorQuery } from "@/lib/cursor";
 
 export function APIKeyFilter({
   filters,
@@ -48,12 +49,13 @@ export function APIKeyFilter({
     const newSearchQuery = addSearchQuery(searchQuery, newSearchItem);
 
     currentUrl.searchParams.set("search", JSON.stringify(newSearchQuery));
+    resetCursorQuery(currentUrl);
     navigate(currentUrl.pathname + currentUrl.search);
     return;
   }
 
   return (
-    <div className="flex flex-col gap-y-4">
+    <div className="flex flex-col gap-y-4 flex-1">
       <Form className="flex gap-x-2" onSubmit={onSubmit}>
         <Select
           name="searchKey"
@@ -99,6 +101,7 @@ export function APIKeyFilter({
               "search",
               JSON.stringify(newSearchQuery)
             );
+            resetCursorQuery(currentUrl);
             navigate(currentUrl.pathname + currentUrl.search);
             return;
           };
