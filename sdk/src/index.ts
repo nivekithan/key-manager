@@ -1,6 +1,8 @@
 import {
+  AddRoleSchema,
   CreateKeyResSchema,
   DeleteKeyResSchema,
+  RemoveRolesSchema,
   RotateKeySchema,
 } from "./schema.ts";
 
@@ -48,6 +50,30 @@ export function initKeyManager({
       const body = await res.json();
 
       return RotateKeySchema.parse(body);
+    },
+
+    async addRoles(userAPIKeyId: string, roles: Array<string>) {
+      const res = await fetch(url + "/api/v1/keys/roles", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${rootAPIKey}` },
+        body: JSON.stringify({ id: userAPIKeyId, roles }),
+      });
+
+      const body = await res.json();
+
+      return AddRoleSchema.parse(body);
+    },
+
+    async removeRoles(userAPIKeyId: string, roles: Array<string>) {
+      const res = await fetch(url + "/api/v1/keys/roles", {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${rootAPIKey}` },
+        body: JSON.stringify({ id: userAPIKeyId, roles }),
+      });
+
+      const body = await res.json();
+
+      return RemoveRolesSchema.parse(body);
     },
   };
 }

@@ -48,3 +48,22 @@ export const RotateKeySchema = z.union([
   makeErrorZodSchema("invalidBody"),
   makeErrorZodSchema("invalidId"),
 ]);
+
+export const AddRoleSchema = z.union([
+  z.object({ success: z.literal(true), count: z.number() }),
+  makeErrorZodSchema("authorizationHeaderNotPresent"),
+  makeErrorZodSchema("apiTokenNotPresent"),
+  makeErrorZodSchema("invalidAPIToken"),
+  makeErrorZodSchema("invalidBody"),
+  makeErrorZodSchema("invalidId"),
+]);
+
+
+export const RemoveRolesSchema = z.union([
+  z.object({ success: z.literal(true), count: z.number() }),
+  makeErrorZodSchema("authorizationHeaderNotPresent"),
+  makeErrorZodSchema("apiTokenNotPresent"),
+  makeErrorZodSchema("invalidAPIToken"),
+  makeErrorZodSchema("invalidBody"),
+  makeErrorZodSchema("invalidId"),
+]);
