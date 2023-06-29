@@ -30,3 +30,12 @@ export const CreateKeyResSchema = z.union([
   makeErrorZodSchema("invalidBody"),
   makeErrorZodSchema("invalidId"),
 ]);
+
+export const DeleteKeyResSchema = z.union([
+  z.object({ success: z.literal(true), id: z.string() }),
+  makeErrorZodSchema("authorizationHeaderNotPresent"),
+  makeErrorZodSchema("apiTokenNotPresent"),
+  makeErrorZodSchema("invalidAPIToken"),
+  makeErrorZodSchema("invalidBody"),
+  makeErrorZodSchema("invalidId"),
+]);

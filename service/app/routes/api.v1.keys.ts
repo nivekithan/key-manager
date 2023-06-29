@@ -10,8 +10,8 @@ import { json, type ActionArgs } from "@remix-run/node";
 import { z } from "zod";
 
 const CreateKeySchema = z.object({
-  prefix: z.string(),
-  roles: z.array(z.string()).optional(),
+  prefix: z.string().nonempty(),
+  roles: z.array(z.string().nonempty()).optional(),
 });
 
 const DeleteKeySchema = z.object({ id: z.string() });

@@ -1,4 +1,4 @@
-import { CreateKeyResSchema } from "./schema.ts";
+import { CreateKeyResSchema, DeleteKeyResSchema } from "./schema.ts";
 
 export type InitKeyManagerOptions = {
   rootAPIKey: string;
@@ -20,6 +20,18 @@ export function initKeyManager({
       const body = await res.json();
 
       return CreateKeyResSchema.parse(body);
+    },
+
+    async deleteUserAPIkey(id: string) {
+      const res = await fetch(url + "/api/v1/keys", {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${rootAPIKey}` },
+        body: JSON.stringify({ id }),
+      });
+
+      const body = await res.json();
+
+      return DeleteKeyResSchema.parse(body);
     },
   };
 }
