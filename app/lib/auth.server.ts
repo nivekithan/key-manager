@@ -22,7 +22,10 @@ export async function requireUserId(request: Request) {
   }
 }
 
-export async function getUserId(request: Request) {
+export async function getUserId(
+  request: Request,
+  retry: boolean = true
+): Promise<string | null> {
   try {
     const cookieHeader = request.headers.get("cookie");
 
@@ -33,15 +36,39 @@ export async function getUserId(request: Request) {
     const cookieKeyValue = cookie.parse(cookieHeader);
     console.log(cookieKeyValue);
     const userId = await passage.authenticateRequestWithHeader({
-      // cookies: cookieKeyValue,
+      cookies: cookieKeyValue,
       headers: { authorization: `Bearer ${cookieKeyValue.psg_auth_token}` },
     });
 
     return userId;
   } catch (err) {
-    console.log(err);
+    console.log({ err, retry });
+    if (retry) {
+      await new Promise((r) => setTimeout(r, 1_000));
+
+      const userId = await getUserId(request, false).catch((err) => ({
+        error: true,
+        err,
+      }));
+
+      if (typeof userId !== "string") {
+        console.log({ error: userId?.err, retry: false });
+        return null;
+      }
+
+      return userId;
+    }
+
     return null;
   }
+}
+
+export async function logout(request: Request) {
+  const cookieHeader = `psg_auth_token=deleted; path=/; expires=${new Date(
+    new Date().getTime() - 1000 * 60 * 60
+  ).toString()}`;
+
+  return cookieHeader;
 }
 
 export async function getUserEmail(id: string) {

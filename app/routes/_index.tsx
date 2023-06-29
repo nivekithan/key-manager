@@ -13,11 +13,13 @@ export const meta: V2_MetaFunction = () => {
 };
 
 export async function loader({ request }: LoaderArgs) {
-  const userId = await getUserId(request);
+  if (new URL(request.url).pathname === "/") {
+    const userId = await getUserId(request);
 
-  if (!userId) {
-    return redirect("/passage");
+    if (!userId) {
+      return redirect("/passage");
+    }
+
+    return redirect("/admin");
   }
-
-  return redirect("/admin");
 }

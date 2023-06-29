@@ -10,6 +10,7 @@
 // import { Input } from "@/components/ui/input";
 // import { Label } from "@/components/ui/label";
 import { APIKeyFilter } from "@/components/apiKeyFilter";
+import { MoreActionsDropdown } from "@/components/moreActionsDropdown";
 import { NewAPIKeyDialog } from "@/components/newAPIKeyDialog";
 import { Button } from "@/components/ui/button";
 import { UserAPIKeyDataTable } from "@/components/userAPIKeyDataTable";
@@ -407,6 +408,7 @@ export default function AdminPage() {
           >
             Next Page
           </Button>
+          <MoreActionsDropdown />
         </div>
       </div>
       <UserAPIKeyDataTable userAPIKeyList={userAPIKeyList} />
