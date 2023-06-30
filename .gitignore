@@ -133,3 +133,4 @@ sdk/playground/index.ts
 sdk/npm
 docs/.cache-loader
 
+/playground

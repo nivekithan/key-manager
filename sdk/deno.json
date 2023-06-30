@@ -1,6 +1,6 @@
 {
     "tasks": {
         "dev" : "deno run --allow-net playground/index.ts",
-        "build" : "deno run -A ./build.ts 1.0.0"
+        "build" : "deno run -A ./build.ts 1.1.0"
     }
 }
