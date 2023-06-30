@@ -1,5 +1,4 @@
 // @ts-check
-// TODO whole things
 // Note: type annotations allow type checking and IDEs autocompletion
 
 const lightCodeTheme = require("prism-react-renderer/themes/github");
@@ -49,7 +48,6 @@ const config = {
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
       // Replace with your project's social card
-      image: "img/docusaurus-social-card.jpg",
       navbar: {
         title: "Key Manager",
         logo: {

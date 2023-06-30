@@ -22,7 +22,7 @@ export type InitKeyManagerOptions<EndpointName extends string> = {
 
 export function initKeyManager<EndpointName extends string>({
   rootAPIKey,
-  url = "http://localhost:3000",
+  url = "https://key-manager.nivekithan.com",
   endpoints,
 }: InitKeyManagerOptions<EndpointName>) {
   return {

@@ -2,7 +2,7 @@
 sidebar_position: 1
 ---
 
-`todo:keymanager` exports only one function that is `initKeyManager`. `initKeyManager` returns an object with `keys`
+`@niveth/key-manager` exports only one function that is `initKeyManager`. `initKeyManager` returns an object with `keys`
 
 1. **`createUserAPIKey`** - Use this to create new `User API Key`
 2. **`verifyUserAPIKey`** - Use this to verify whether provided `User API Key` is valid and it has not exceeded ratelimit
@@ -37,7 +37,7 @@ export function initKeyManager<EndpointName extends string>({
 It takes an object with keys
 
 1. **`rootAPIKey`** - **`string`**, `Root API Key` which you have copied from the website
-2. **`url`** (optional) - **`string`**, If you have self hosted `key manager` then the url of your instance of `key manager`. Make sure the url is in this format `todo:https://key-manager.nivekithan.com`, notice there is no trailing slash (/). By default it's set to url of managed `key manager` instance at todo:https://key-manager.nivekithan.com
+2. **`url`** (optional) - **`string`**, If you have self hosted `key manager` then the url of your instance of `key manager`. Make sure the url is in this format `https://key-manager.nivekithan.com`, notice there is no trailing slash (/)
 3. **`endpoints`** - Define `endpoints` you have to ratelimit and their ratelimits.
 
 ```ts
@@ -55,8 +55,6 @@ export type Endpoints<EndpointName extends string> = {
 
 - **`roles`** (optional) - Its type signature is `Record<string, {maxReq : number; duration : number}>`. Its an object with `role` as its keys and ratelimit as their values.
 
-To know how does `key manager` choose which ratelimit to apply checkout todo
-
 ## Example
 
 Its recommended that you create a new file called `keyManager.ts` in that initialize the `key manager`.
@@ -65,7 +63,7 @@ Its recommended that you create a new file called `keyManager.ts` in that initia
 
 ```ts
 // keyManager.ts
-import { initKeyManager } from "todo:keymanger";
+import { initKeyManager } from "@niveth/key-manager";
 
 export const {
   verifyUserAPIKey,

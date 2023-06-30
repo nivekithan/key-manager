@@ -63,7 +63,7 @@ Which means `user` can make `10 requests` to `GET /api/v1/tasks/1` and `10 reque
 1. First you will define `endpoint` in `initKeyManager`
 
 ```ts
-import { initKeyManager } from "todo:keymanger";
+import { initKeyManager } from "@niveth/key-manager";
 
 export const { verifyUserAPIKey } = initKeyManager({
   rootAPIKey: process.env.KEY_MANAGER_ROOT_KEY,

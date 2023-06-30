@@ -11,8 +11,6 @@ Let's discover **Key Manager in less than 5 minutes**.
 
 Get started by **creating a new account at [key-manager.nivekithan.com](http://localhost:3000/)**.
 
-To self host `key manager` checkout documentation at **TODO**
-
 ## Generate new Root API Key
 
 Once you signed in through Passage by 1Password. You will be asked to created new `Root API Key`. Make sure you have copied the generated `Root API Key` and stored it safely. Since it is needed for making any requests to `key manager` and it will not be shown again after that screen.
@@ -37,5 +35,5 @@ If you backend is written in `Typescript/Javascript` it is recommended to use `s
 To install
 
 ```bash
-TODO
+pnpm i @niveth/key-manager
 ```
