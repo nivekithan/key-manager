@@ -6,17 +6,18 @@ await build({
   entryPoints: ["./src/index.ts"],
   outDir: "./npm",
   package: {
-    name: "key-manager",
+    name: "@niveth/key-manager",
     version: Deno.args[0],
     description: "Your package.",
     license: "MIT",
     repository: {
       type: "git",
-      url: "git+https://github.com/username/repo.git",
+      url: "git+https://github.com/nivekithan/key-manager.git",
     },
     bugs: {
-      url: "https://github.com/username/repo/issues",
+      url: "https://github.com/nivekithan/key-manager/issues",
     },
+    private: false,
   },
   shims: {
     undici: true,
