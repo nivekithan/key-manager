@@ -1,4 +1,4 @@
-import type { LinksFunction } from "@remix-run/node";
+import type { LinksFunction, V2_MetaFunction } from "@remix-run/node";
 import {
   Links,
   LiveReload,
@@ -14,6 +14,10 @@ export const links: LinksFunction = () => [
   { rel: "stylesheet", href: stylesheet },
 ];
 
+export const meta: V2_MetaFunction = () => {
+  return [{ title: "Key Manager" }];
+};
+
 export default function App() {
   return (
     <html lang="en">
@@ -24,7 +28,6 @@ export default function App() {
         <Links />
       </head>
       <body>
-
         <Outlet />
         <Toaster />
         <ScrollRestoration />

@@ -1,18 +1,8 @@
-// import { Button } from "@/components/ui/button";
-// import {
-//   Card,
-//   CardContent,
-//   CardDescription,
-//   CardFooter,
-//   CardHeader,
-//   CardTitle,
-// } from "@/components/ui/card";
-// import { Input } from "@/components/ui/input";
-// import { Label } from "@/components/ui/label";
 import { APIKeyFilter } from "@/components/apiKeyFilter";
 import { MoreActionsDropdown } from "@/components/moreActionsDropdown";
 import { NewAPIKeyDialog } from "@/components/newAPIKeyDialog";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import { UserAPIKeyDataTable } from "@/components/userAPIKeyDataTable";
 import {
   addRolesToUserAPIKey,
@@ -27,7 +17,7 @@ import {
   storeRootAPIKey,
   storeUserAPIKey,
 } from "@/lib/apiKeys.server";
-import { requireUserId } from "@/lib/auth.server";
+import { getUserEmail, requireUserId } from "@/lib/auth.server";
 import { parseCursorQuery } from "@/lib/cursor";
 import { parseSearchQuery } from "@/lib/search";
 import { uniqueArray } from "@/lib/util/utils";
@@ -42,6 +32,7 @@ import {
   useFetcher,
   useLoaderData,
   useNavigate,
+  Link,
 } from "@remix-run/react";
 import { z } from "zod";
 
@@ -62,6 +53,7 @@ export const shouldRevalidate: ShouldRevalidateFunction = ({
 
 export async function loader({ request }: LoaderArgs) {
   const userId = await requireUserId(request);
+  const email = await getUserEmail(userId);
   const searchQuery = parseSearchQuery(new URL(request.url));
   const cursorQuery = parseCursorQuery(new URL(request.url));
 
@@ -102,6 +94,7 @@ export async function loader({ request }: LoaderArgs) {
     nextPageCursor: isNextPageAvaliable
       ? userAPIKeyList.at(-1)?.createdAt
       : null,
+    email,
   });
 }
 
@@ -348,50 +341,36 @@ export function useAdminFetcher() {
   return fetcher;
 }
 
-// export default function AdminPage() {
-//   const { userAPIKeyList } = useLoaderData<typeof loader>();
-//   const actionData = useActionData<typeof action>();
-//   const isAPIListEmpty = userAPIKeyList.length === 0;
-//   const apiKey = actionData?.success ? actionData.apiKey : null;
-
-//   return (
-//     <main className="min-h-screen grid place-items-center">
-//       <Card className="w-96">
-//         <CardHeader>
-//           <CardTitle>Create new API</CardTitle>
-//           <CardDescription>Each API gets its own token</CardDescription>
-//         </CardHeader>
-//         <CardContent>
-//           <Form>
-//             <Label htmlFor="api-name">Name of the API</Label>
-//             <Input
-//               type="text"
-//               placeholder="my-app-api"
-//               id="api-name"
-//               name="apiName"
-//             />
-//           </Form>
-//         </CardContent>
-//         <CardFooter className="flex">
-//           <Button>Generate</Button>
-//         </CardFooter>
-//       </Card>
-//       <h1>{apiKey}</h1>
-//       <Form method="POST">
-//         <button type="submit" name="action" value="generateAPIKey">
-//           Generate API Key
-//         </button>
-//       </Form>
-//     </main>
-//   );
-// }
 export default function AdminPage() {
-  const { userAPIKeyList, searchQuery, nextPageCursor } =
+  const { userAPIKeyList, searchQuery, nextPageCursor, email } =
     useLoaderData<typeof loader>();
   const navigate = useNavigate();
 
   return (
     <div className="container mx-auto py-10 flex flex-col gap-y-4">
+      <div>
+        <h1 className="font-semibold text-3xl">Key Manager</h1>
+        <span className="font-medium">{email}</span>
+        <Button variant="link" asChild>
+          <Link
+            to="https://docs-key-manager.nivekithan.com/intro"
+            target="_blank"
+          >
+            Check out Docs
+          </Link>
+        </Button>
+        <Button variant="link" asChild>
+          <Link to="https://github.com/nivekithan/key-manager" target="_blank">
+            Github
+          </Link>
+        </Button>
+        <Button variant="link" asChild>
+          <Link to="https://github.com/nivekithan" target="_blank">
+            Made by Nivekithan S
+          </Link>
+        </Button>
+        <Separator />
+      </div>
       <div className="flex justify-between">
         <APIKeyFilter filters={searchQuery} />
         <div className="flex gap-x-4">
