@@ -9,7 +9,7 @@ const errors = {
   internalServerError: "internalServerError",
 } as const;
 
-function makeErrorZodSchema(error: keyof typeof errors) {
+function makeErrorZodSchema<error extends keyof typeof errors>(error: error) {
   return z.object({
     success: z.literal(false),
     error: z.literal(errors[error]),

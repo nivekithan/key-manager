@@ -38,7 +38,7 @@ export function initKeyManager<EndpointName extends string>({
       return CreateKeyResSchema.parse(body);
     },
 
-    async deleteUserAPIkey(id: string) {
+    async deleteUserAPIKey(id: string) {
       const res = await fetch(url + "/api/v1/keys", {
         method: "DELETE",
         headers: { Authorization: `Bearer ${rootAPIKey}` },
