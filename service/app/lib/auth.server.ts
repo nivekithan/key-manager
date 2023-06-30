@@ -35,7 +35,6 @@ export async function getUserId(
     }
 
     const cookieKeyValue = cookie.parse(cookieHeader);
-    console.log(cookieKeyValue);
     const userId = await passage.authenticateRequestWithHeader({
       cookies: cookieKeyValue,
       headers: { authorization: `Bearer ${cookieKeyValue.psg_auth_token}` },

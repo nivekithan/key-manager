@@ -35,10 +35,12 @@ const config = {
       ({
         docs: {
           sidebarPath: require.resolve("./sidebars.js"),
+          routeBasePath: "/",
         },
         theme: {
           customCss: require.resolve("./src/css/custom.css"),
         },
+        blog: false,
       }),
     ],
   ],
@@ -53,11 +55,17 @@ const config = {
         logo: {
           alt: "key Manager Logo",
           src: "img/logo.svg",
+          href: "/intro",
         },
         items: [
           {
             href: "https://github.com/nivekithan/key-manager",
             label: "GitHub",
+            position: "right",
+          },
+          {
+            href: "https://key-manager.nivekithan.com",
+            label: "Key Manager",
             position: "right",
           },
         ],
@@ -77,12 +85,12 @@ const config = {
         darkTheme: darkCodeTheme,
       },
     }),
-  plugins: [
-    [
-      "@docusaurus/plugin-client-redirects",
-      { redirects: [{ to: "/docs/intro", from: ["/", "/docs"] }] },
-    ],
-  ],
+  // plugins: [
+  //   [
+  //     "@docusaurus/plugin-client-redirects",
+  //     { redirects: [{ to: "/docs/intro", from: ["/", "/docs"] }] },
+  //   ],
+  // ],
 };
 
 module.exports = config;
