@@ -9,3 +9,5 @@ Checkout the live version of `Key Manager` at - https://key-manager.nivekithan.c
 Checkout the `Typescript/Javascript/` `sdk` for `Key Manager` at - https://www.npmjs.com/package/@niveth/key-manager
 
 Checkout the docs for `Key Manager` at - https://docs-key-manager.nivekithan.com/intro
+
+Demo repo use this to play around with `key manager` - https://github.com/nivekithan/key-manager-example-app
