@@ -360,16 +360,6 @@ export default function AdminPage() {
           </Link>
         </Button>
         <Button variant="link" asChild>
-          <Link to="https://github.com/nivekithan/key-manager" target="_blank">
-            Github
-          </Link>
-        </Button>
-        <Button variant="link" asChild>
-          <Link to="https://github.com/nivekithan" target="_blank">
-            Made by Nivekithan S
-          </Link>
-        </Button>
-        <Button variant="link" asChild>
           <Link to="https://hashnode.com/hackathons/1password" target="_blank">
             Made for 1Password and Hashnode Hackathon
           </Link>
