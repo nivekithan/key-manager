@@ -369,6 +369,11 @@ export default function AdminPage() {
             Made by Nivekithan S
           </Link>
         </Button>
+        <Button variant="link" asChild>
+          <Link to="https://hashnode.com/hackathons/1password" target="_blank">
+            Made for 1Password and Hashnode Hackathon
+          </Link>
+        </Button>
         <Separator />
       </div>
       <div className="flex justify-between">
