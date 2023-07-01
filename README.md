@@ -1,6 +1,6 @@
 # Key Manager | Managing API Keys for you | Role based Ratelimits
 
-This is a project created for **1 Password & Hashnode Hackathon**
+This project is created for **1 Password & Hashnode Hackathon**
 
 Checkout the blog introducing the `Key Manager` - https://blog.nivekithan.com/key-manager-managing-api-keys-for-you-role-based-ratelimts
 
